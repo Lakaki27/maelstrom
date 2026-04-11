@@ -16,7 +16,7 @@ in
 
   boot.supportedFilesystems = [ "zfs" ];
   # Generate once: head -c 8 /dev/urandom | od -A n -t x8 | tr -d ' \n'
-  networking.hostId = "afc98f5a2e1f1960";
+  networking.hostId = "afc98f5a";
 
   # ──────────────────────────────────────────
   # Networking
