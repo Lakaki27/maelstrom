@@ -1,10 +1,17 @@
 { config, pkgs, lib, ... }:
 
+
 let
-  composeDir = "/opt/riptide";
-  composeRepo = "github:youruser/riptide"; # TODO: replace with your actual repo
+  composeDir = "/opt/maelstrom";
+  composeRepo = "github:lakaki27/maelstrom";
 in
 {
+  security.sudo.wheelNeedsPassword = false;
+  users.users.maelstrom = {
+    isNormalUser = true;
+    extraGroups = [ "wheel" ];
+  };
+
   # ──────────────────────────────────────────
   # Boot & hardware
   # ──────────────────────────────────────────
@@ -18,7 +25,7 @@ in
   # ──────────────────────────────────────────
   # Networking
   # ──────────────────────────────────────────
-  networking.hostName = "riptide";
+  networking.hostName = "maelstrom";
   networking.networkmanager.enable = true;
 
   networking.firewall = {
@@ -80,7 +87,7 @@ in
   # ──────────────────────────────────────────
   # Redis (native)
   # ──────────────────────────────────────────
-  services.redis.servers.riptide = {
+  services.redis.servers.maelstrom = {
     enable = true;
     port = 6379;
     bind = "127.0.0.1";
@@ -196,7 +203,7 @@ in
     enable = true;
     listenPort = 8082;
     settings = {
-      title = "riptide";
+      title = "maelstrom";
       theme = "dark";
       color = "slate";
       headerStyle = "clean";
@@ -266,11 +273,11 @@ in
   # ──────────────────────────────────────────
   # Users
   # ──────────────────────────────────────────
-  users.users.leo = { # TODO: replace with your username
+  users.users.maelstrom = {
     isNormalUser = true;
     extraGroups = [ "wheel" "docker" ];
     openssh.authorizedKeys.keys = [
-      # TODO: "ssh-ed25519 AAAA... you@machine"
+        "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG/4M8fggqYWUdoG8DiWKLIhNWNmy7djUc9+FS/jI7LG leo@starborne"
     ];
   };
 
@@ -305,7 +312,7 @@ in
   # ──────────────────────────────────────────
   system.autoUpgrade = {
     enable = true;
-    flake = "${composeRepo}#riptide";
+    flake = "${composeRepo}#maelstrom";
     flags = [ "--update-input" "nixpkgs" ];
     dates = "04:00";
     allowReboot = false;
@@ -325,7 +332,7 @@ in
       ExecStart = pkgs.writeShellScript "compose-pull" ''
         set -euo pipefail
         HASH_FILE="/var/lib/compose-pull/last-hash"
-        REPO="youruser/riptide" # TODO: replace
+        REPO="lakaki27/maelstrom"
         mkdir -p "$(dirname "$HASH_FILE")"
         CURRENT=$(${pkgs.curl}/bin/curl -sf \
           "https://api.github.com/repos/$REPO/commits?path=compose.yaml&per_page=1" \
@@ -358,7 +365,7 @@ in
   systemd.tmpfiles.rules = [
     "d /var/lib/compose-pull 0755 root root -"
     "d /etc/secrets 0700 root root -"
-    "d ${composeDir} 0750 leo docker -" # TODO: replace "leo"
+    "d ${composeDir} 0750 maelstrom docker -"
   ];
 
   # ──────────────────────────────────────────

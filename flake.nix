@@ -1,5 +1,5 @@
 {
-  description = "riptide — home server";
+  description = "maelstrom home server";
 
   inputs = {
     nixpkgs.url = "github:NixOS/nixpkgs/nixos-25.11";

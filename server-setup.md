@@ -1,12 +1,12 @@
-# riptide — server setup guide
+# maelstrom — server setup guide
 
 ## 1. NixOS install
 
-Standard NixOS install on the N100. After partitioning, clone your repo to `/opt/riptide` and symlink the flake:
+Standard NixOS install on the N100. After partitioning, clone your repo to `/opt/maelstrom` and symlink the flake:
 
 ```bash
-git clone https://github.com/youruser/riptide /opt/riptide
-nixos-install --flake /opt/riptide#riptide
+git clone https://github.com/youruser/maelstrom /opt/maelstrom
+nixos-install --flake /opt/maelstrom#maelstrom
 ```
 
 ---
@@ -49,8 +49,8 @@ Until the drive arrives, the `/mnt/nas` mount in `configuration.nix` will simply
 ## 4. Generate TLS certificates (self-signed, local .home domains)
 
 ```bash
-mkdir -p /opt/riptide/traefik/certs
-cd /opt/riptide/traefik/certs
+mkdir -p /opt/maelstrom/traefik/certs
+cd /opt/maelstrom/traefik/certs
 
 openssl req -x509 -nodes -days 3650 -newkey rsa:4096 \
   -keyout local.key -out local.crt \
@@ -80,9 +80,9 @@ Or use a wildcard `*.home → 192.168.1.X` if your router supports it.
 ## 6. Configure secrets
 
 ```bash
-cp /opt/riptide/.env.example /opt/riptide/.env
+cp /opt/maelstrom/.env.example /opt/maelstrom/.env
 # Edit .env and fill every value
-nano /opt/riptide/.env
+nano /opt/maelstrom/.env
 ```
 
 ---
@@ -104,7 +104,7 @@ chmod 600 /etc/wireguard/private.key
 ## 8. First `docker compose up`
 
 ```bash
-cd /opt/riptide
+cd /opt/maelstrom
 docker compose pull
 docker compose up -d
 ```

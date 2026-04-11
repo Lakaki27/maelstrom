@@ -1,4 +1,4 @@
-# Riptide stack
+# Maelstrom stack
 
 ## Done
 
