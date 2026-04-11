@@ -1,6 +1,9 @@
 { config, lib, pkgs, modulesPath, ... }:
 
-{
+{ fileSystems."/boot" = {
+   device = "/dev/disk/by-uuid/E440-B5Z4";
+   fsType = "vfat";
+ };
   imports = [
     (modulesPath + "/installer/scan/not-detected.nix")
   ];
@@ -16,6 +19,7 @@
   fileSystems."/boot" = {
     device = "/dev/disk/by-uuid/E440-B5Z4";
     fsType = "vfat";
+    options = [ "umask=0077" ];
   };
 
   boot.initrd.availableKernelModules = [
