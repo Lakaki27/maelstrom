@@ -6,11 +6,7 @@ let
   composeRepo = "github:lakaki27/maelstrom";
 in
 {
-  security.sudo.wheelNeedsPassword = false;
-  users.users.maelstrom = {
-    isNormalUser = true;
-    extraGroups = [ "wheel" ];
-  };
+  nix.settings.experimental-features = [ "nix-command" "flakes" ];
 
   # ──────────────────────────────────────────
   # Boot & hardware

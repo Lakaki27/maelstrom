@@ -6,7 +6,7 @@
   };
 
   outputs = { self, nixpkgs }: {
-    nixosConfigurations.riptide = nixpkgs.lib.nixosSystem {
+    nixosConfigurations.maelstrom = nixpkgs.lib.nixosSystem {
       system = "x86_64-linux";
       modules = [ ./configuration.nix ];
     };
