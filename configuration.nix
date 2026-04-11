@@ -162,7 +162,7 @@ in
       };
     };
     # Format: GITEA__section__KEY=value, e.g. GITEA__mailer__SMTP_ADDR=smtp.example.com
-    secretFile = "/etc/secrets/gitea.env";
+    # secretFile = "/etc/secrets/gitea.env";
   };
 
   # ──────────────────────────────────────────
