@@ -1,7 +1,7 @@
 # compose.yaml — Docker-only services
 #
 # The following are managed natively by NixOS (configuration.nix):
-#   PostgreSQL, Redis, Paperless, Vaultwarden, Gitea, Gatus, Deluge
+#   PostgreSQL, Redis, Paperless, Vaultwarden, Gitea, Gatus
 #
 # This file only runs services that have no NixOS module:
 #   Traefik, Chiyogami, ConvertX, Send, Seafile
@@ -9,7 +9,6 @@
 # Native services are proxied by Traefik via host network (127.0.0.1:PORT).
 
 services:
-
     # ──────────────────────────────────────────
     # Traefik — reverse proxy for everything
     # Routes to both Docker services and native NixOS services
@@ -116,7 +115,7 @@ services:
             - NODE_ENV=production
             - BASE_URL=${SEND_BASE_URL}
             - PORT=1234
-            - REDIS_HOST=host.docker.internal   # native Redis on 127.0.0.1
+            - REDIS_HOST=host.docker.internal # native Redis on 127.0.0.1
             - REDIS_PORT=6379
             - FILE_DIR=/uploads
             - MAX_FILE_SIZE=2147483648
@@ -153,7 +152,7 @@ services:
         depends_on:
             - seafile-memcached
         volumes:
-            - /mnt/nas/seafile:/shared   # all user data lands on ZFS
+            - /mnt/nas/seafile:/shared # all user data lands on ZFS
         environment:
             - DB_HOST=host.docker.internal
             - DB_PORT=5432
@@ -161,7 +160,7 @@ services:
             - DB_ROOT_PASSWD=${SEAFILE_DB_PASSWORD}
             - SEAFILE_ADMIN_EMAIL=${SEAFILE_ADMIN_EMAIL}
             - SEAFILE_ADMIN_PASSWORD=${SEAFILE_ADMIN_PASSWORD}
-            - SEAFILE_SERVER_LETSENCRYPT=false  # TLS handled by Traefik
+            - SEAFILE_SERVER_LETSENCRYPT=false # TLS handled by Traefik
             - SEAFILE_SERVER_HOSTNAME=seafile.home
             - TIME_ZONE=${TZ:-Europe/Paris}
             - MEMCACHE_HOST=seafile-memcached

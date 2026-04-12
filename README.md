@@ -22,12 +22,12 @@
 ## To include
 
 - MMDL
-- Deluge
 - gitea
 - gatus
 
 ## To explore
 
+- Deluge
 - Rallly
 - Reactive resume
 - Grafana

@@ -181,7 +181,6 @@ in
         { name = "Chiyogami";   url = "https://chiyogami.home";   interval = "2m";  conditions = [ "[STATUS] == 200" ]; }
         { name = "ConvertX";    url = "https://convertx.home";    interval = "5m";  conditions = [ "[STATUS] < 400" ]; }
         { name = "Send";        url = "https://send.home";        interval = "2m";  conditions = [ "[STATUS] == 200" ]; }
-        { name = "Deluge";      url = "https://deluge.home";      interval = "5m";  conditions = [ "[STATUS] < 400" ]; }
         { name = "Seafile";     url = "https://seafile.home";     interval = "2m";  conditions = [ "[STATUS] == 200" ]; }
         { name = "Homepage";    url = "https://home.home";        interval = "5m";  conditions = [ "[STATUS] == 200" ]; }
       ];
@@ -212,7 +211,6 @@ in
       { "Infrastructure" = [
         { Traefik     = { href = "https://traefik.home";     description = "Reverse proxy";         icon = "traefik.png"; }; }
         { Gatus       = { href = "https://gatus.home";       description = "Uptime monitoring";     icon = "gatus.png"; }; }
-        { Deluge      = { href = "https://deluge.home";      description = "Torrent client";        icon = "deluge.png"; }; }
       ]; }
       { "Files & Docs" = [
         { Seafile     = { href = "https://seafile.home";     description = "File storage";          icon = "seafile.png"; }; }
@@ -228,26 +226,6 @@ in
         { ConvertX    = { href = "https://convertx.home";    description = "File converter";        icon = "convertx.png"; }; }
       ]; }
     ];
-  };
-
-
-  # NOTE: no VPN kill-switch in the NixOS module.
-  # If you want one, either use a network namespace (advanced) or
-  # move Deluge back to Docker with gluetun.
-  # ──────────────────────────────────────────
-  services.deluge = {
-    enable = true;
-    web.enable = true;
-    web.port = 8112;
-    dataDir = "/mnt/nas/downloads";
-    declarative = true;
-    # format: "username:password:level" e.g. "localclient:yourpassword:10"
-    authFile = "/etc/secrets/deluge-auth";
-    config = {
-      download_location = "/mnt/nas/downloads";
-      max_active_downloading = 3;
-      max_active_seeding = 5;
-    };
   };
 
   # ──────────────────────────────────────────

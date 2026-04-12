@@ -6,70 +6,59 @@
 # Add a new block here whenever you add a new native NixOS service.
 
 http:
-  routers:
-    paperless:
-      rule: "Host(`paperless.home`)"
-      entryPoints: [websecure]
-      tls: {}
-      service: paperless
+    routers:
+        paperless:
+            rule: "Host(`paperless.home`)"
+            entryPoints: [websecure]
+            tls: {}
+            service: paperless
 
-    vaultwarden:
-      rule: "Host(`vaultwarden.home`)"
-      entryPoints: [websecure]
-      tls: {}
-      service: vaultwarden
+        vaultwarden:
+            rule: "Host(`vaultwarden.home`)"
+            entryPoints: [websecure]
+            tls: {}
+            service: vaultwarden
 
-    gitea:
-      rule: "Host(`gitea.home`)"
-      entryPoints: [websecure]
-      tls: {}
-      service: gitea
+        gitea:
+            rule: "Host(`gitea.home`)"
+            entryPoints: [websecure]
+            tls: {}
+            service: gitea
 
-    gatus:
-      rule: "Host(`gatus.home`)"
-      entryPoints: [websecure]
-      tls: {}
-      service: gatus
+        gatus:
+            rule: "Host(`gatus.home`)"
+            entryPoints: [websecure]
+            tls: {}
+            service: gatus
 
-    deluge:
-      rule: "Host(`deluge.home`)"
-      entryPoints: [websecure]
-      tls: {}
-      service: deluge
+        homepage:
+            rule: "Host(`home.home`)"
+            entryPoints: [websecure]
+            tls: {}
+            service: homepage
 
-    homepage:
-      rule: "Host(`home.home`)"
-      entryPoints: [websecure]
-      tls: {}
-      service: homepage
+    services:
+        paperless:
+            loadBalancer:
+                servers:
+                    - url: "http://host.docker.internal:28981" # default paperless port
 
-  services:
-    paperless:
-      loadBalancer:
-        servers:
-          - url: "http://host.docker.internal:28981"   # default paperless port
+        vaultwarden:
+            loadBalancer:
+                servers:
+                    - url: "http://host.docker.internal:8222" # ROCKET_PORT in configuration.nix
 
-    vaultwarden:
-      loadBalancer:
-        servers:
-          - url: "http://host.docker.internal:8222"    # ROCKET_PORT in configuration.nix
+        gitea:
+            loadBalancer:
+                servers:
+                    - url: "http://host.docker.internal:3001" # HTTP_PORT in configuration.nix
 
-    gitea:
-      loadBalancer:
-        servers:
-          - url: "http://host.docker.internal:3001"    # HTTP_PORT in configuration.nix
+        gatus:
+            loadBalancer:
+                servers:
+                    - url: "http://host.docker.internal:8090" # web.port in configuration.nix
 
-    gatus:
-      loadBalancer:
-        servers:
-          - url: "http://host.docker.internal:8090"    # web.port in configuration.nix
-
-    deluge:
-      loadBalancer:
-        servers:
-          - url: "http://host.docker.internal:8112"    # web.port in configuration.nix
-
-    homepage:
-      loadBalancer:
-        servers:
-          - url: "http://host.docker.internal:8082"    # listenPort in configuration.nix
+        homepage:
+            loadBalancer:
+                servers:
+                    - url: "http://host.docker.internal:8082" # listenPort in configuration.nix
