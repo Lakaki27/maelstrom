@@ -14,7 +14,7 @@ in
   boot.loader.systemd-boot.enable = true;
   boot.loader.efi.canTouchEfiVariables = true;
 
-  boot.supportedFilesystems = [ "zfs" ];
+  # boot.supportedFilesystems = [ "zfs" ];
   boot.initrd.supportedFilesystems = [ "vfat" ];
   # Generate once: head -c 8 /dev/urandom | od -A n -t x8 | tr -d ' \n'
   networking.hostId = "4b3143a6";
@@ -39,18 +39,18 @@ in
   # ──────────────────────────────────────────
   # ZFS
   # ──────────────────────────────────────────
-  services.zfs = {
-    autoScrub.enable = true;
-    autoScrub.interval = "weekly";
-    trim.enable = true;
-  };
+  # services.zfs = {
+  #   autoScrub.enable = true;
+  #   autoScrub.interval = "weekly";
+  #   trim.enable = true;
+  # };
 
-  fileSystems."/mnt/nas" = {
-    device = "data/nas";
-    fsType = "zfs";
-    options = [ "zfsutil" "X-mount.mkdir" ];
-    neededForBoot = false;
-  };
+  # fileSystems."/mnt/nas" = {
+  #   device = "data/nas";
+  #   fsType = "zfs";
+  #   options = [ "zfsutil" "X-mount.mkdir" ];
+  #   neededForBoot = false;
+  # };
 
   # ──────────────────────────────────────────
   # PostgreSQL (native)
@@ -284,7 +284,7 @@ in
     curl
     wget
     jq
-    zfs
+    # zfs
     smartmontools
     lsof
   ];
