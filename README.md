@@ -25,10 +25,10 @@
 - Deluge
 - gitea
 - gatus
-- Rallly
 
 ## To explore
 
+- Rallly
 - Reactive resume
 - Grafana
 - Prometheus

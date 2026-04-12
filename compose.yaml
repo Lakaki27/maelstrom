@@ -4,7 +4,7 @@
 #   PostgreSQL, Redis, Paperless, Vaultwarden, Gitea, Gatus, Deluge
 #
 # This file only runs services that have no NixOS module:
-#   Traefik, Chiyogami, ConvertX, Send, Rallly, Seafile
+#   Traefik, Chiyogami, ConvertX, Send, Seafile
 #
 # Native services are proxied by Traefik via host network (127.0.0.1:PORT).
 
@@ -132,38 +132,6 @@ services:
             - traefik.http.routers.send.entrypoints=websecure
             - traefik.http.routers.send.tls=true
             - traefik.http.services.send.loadbalancer.server.port=1234
-
-    # ──────────────────────────────────────────
-    # Rallly — scheduling / polls
-    # Uses the native PostgreSQL instance on the host
-    # ──────────────────────────────────────────
-    rallly:
-        image: lukevella/rallly:latest
-        container_name: rallly
-        restart: unless-stopped
-        environment:
-            # Connects to native postgres via TCP on localhost
-            - DATABASE_URL=postgresql://rallly@host.docker.internal:5432/rallly
-            - SECRET_PASSWORD=${RALLLY_SECRET_PASSWORD}
-            - NEXT_PUBLIC_BASE_URL=https://rallly.home
-            - SMTP_HOST=${SMTP_HOST}
-            - SMTP_PORT=${SMTP_PORT}
-            - SMTP_SECURE=false
-            - SMTP_USER=${SMTP_USERNAME}
-            - SMTP_PWD=${SMTP_PASSWORD}
-            - SUPPORT_EMAIL=${SMTP_FROM}
-            - DISABLE_USER_REGISTRATION=true
-        extra_hosts:
-            - "host.docker.internal:host-gateway"
-        networks:
-            - proxy
-        labels:
-            - traefik.enable=true
-            - traefik.http.routers.rallly.rule=Host(`rallly.home`)
-            - traefik.http.routers.rallly.entrypoints=websecure
-            - traefik.http.routers.rallly.tls=true
-            - traefik.http.services.rallly.loadbalancer.server.port=3000
-
 
     # ──────────────────────────────────────────
     # Seafile — file storage & sharing (Google Drive-style)

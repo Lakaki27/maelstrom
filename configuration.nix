@@ -60,15 +60,13 @@ in
     package = pkgs.postgresql_17;
     # All services connect via Unix socket with peer auth — no passwords needed
     ensureDatabases = [
-      "paperless" "vaultwarden" "gitea" "rallly"
-      # Seafile needs three separate databases
+      "paperless" "vaultwarden" "gitea"      # Seafile needs three separate databases
       "ccnet-db" "seafile-db" "seahub-db"
     ];
     ensureUsers = [
       { name = "paperless";   ensureDBOwnership = true; }
       { name = "vaultwarden"; ensureDBOwnership = true; }
       { name = "gitea";       ensureDBOwnership = true; }
-      { name = "rallly";      ensureDBOwnership = true; }
       # Seafile uses one user across all three of its databases
       { name = "seafile"; ensureDBOwnership = false; }
     ];
@@ -183,7 +181,6 @@ in
         { name = "Chiyogami";   url = "https://chiyogami.home";   interval = "2m";  conditions = [ "[STATUS] == 200" ]; }
         { name = "ConvertX";    url = "https://convertx.home";    interval = "5m";  conditions = [ "[STATUS] < 400" ]; }
         { name = "Send";        url = "https://send.home";        interval = "2m";  conditions = [ "[STATUS] == 200" ]; }
-        { name = "Rallly";      url = "https://rallly.home";      interval = "5m";  conditions = [ "[STATUS] == 200" ]; }
         { name = "Deluge";      url = "https://deluge.home";      interval = "5m";  conditions = [ "[STATUS] < 400" ]; }
         { name = "Seafile";     url = "https://seafile.home";     interval = "2m";  conditions = [ "[STATUS] == 200" ]; }
         { name = "Homepage";    url = "https://home.home";        interval = "5m";  conditions = [ "[STATUS] == 200" ]; }
@@ -229,7 +226,6 @@ in
       { "Tools" = [
         { Vaultwarden = { href = "https://vaultwarden.home"; description = "Password manager";      icon = "vaultwarden.png"; }; }
         { ConvertX    = { href = "https://convertx.home";    description = "File converter";        icon = "convertx.png"; }; }
-        { Rallly      = { href = "https://rallly.home";      description = "Scheduling";            icon = "rallly.png"; }; }
       ]; }
     ];
   };
@@ -256,7 +252,7 @@ in
 
   # ──────────────────────────────────────────
   # Docker — only for services without NixOS modules:
-  # Traefik, Chiyogami, ConvertX, Send, Rallly, Seafile
+  # Traefik, Chiyogami, ConvertX, Send, Seafile
   # ──────────────────────────────────────────
   virtualisation.docker = {
     enable = true;
