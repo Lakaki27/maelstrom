@@ -17,7 +17,7 @@ in
   boot.supportedFilesystems = [ "zfs" ];
   boot.initrd.supportedFilesystems = [ "vfat" ];
   # Generate once: head -c 8 /dev/urandom | od -A n -t x8 | tr -d ' \n'
-  networking.hostId = "afc98f5a";
+  networking.hostId = "4b3143a6";
 
   # ──────────────────────────────────────────
   # Networking
