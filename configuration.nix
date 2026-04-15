@@ -21,21 +21,14 @@
   i18n.defaultLocale = "en_US.UTF-8";
 
   age.secrets = {
-    paperlessAdminPassword  = { file = ./paperless-admin-password.age;  owner = "paperless"; };
-    paperlessSecretKey      = { file = ./paperless-secret-key.age;      owner = "paperless"; };
-    vaultwardenAdminToken   = { file = ./vaultwarden-admin-token.age;   };
-    vaultwardenSmtpPassword = { file = ./vaultwarden-smtp-password.age; };
-    giteaSecretKey          = { file = ./gitea-secret-key.age;          owner = "gitea"; };
-    giteaInternalToken      = { file = ./gitea-internal-token.age;      owner = "gitea"; };
-    giteaJwtSecret          = { file = ./gitea-jwt-secret.age;          owner = "gitea"; };
-    giteaSmtpPassword       = { file = ./gitea-smtp-password.age;       owner = "gitea"; };
-    traefikTlsCert          = { file = ./traefik-tls-cert.age;          owner = "traefik"; path = "/run/traefik/tls.crt"; };
-    traefikTlsKey           = { file = ./traefik-tls-key.age;           owner = "traefik"; path = "/run/traefik/tls.key"; mode = "0400"; };
-    sendSecret              = { file = ./send-secret.age; };
-    convertxJwtSecret       = { file = ./convertx-jwt-secret.age; };
-    chiyogamiSecretKey      = { file = ./chiyogami-secret-key.age; };
-    smtpUsername            = { file = ./smtp-username.age; };
-    smtpPassword            = { file = ./smtp-password.age; };
+    paperlessAdminPassword = { file = ./paperless-admin-password.age; owner = "paperless"; };
+    paperlessSecretKey     = { file = ./paperless-secret-key.age;     owner = "paperless"; };
+    vaultwardenAdminToken  = { file = ./vaultwarden-admin-token.age; };
+    traefikTlsCert         = { file = ./traefik-tls-cert.age; owner = "traefik"; path = "/run/traefik/tls.crt"; };
+    traefikTlsKey          = { file = ./traefik-tls-key.age;  owner = "traefik"; path = "/run/traefik/tls.key"; mode = "0400"; };
+    sendSecret             = { file = ./send-secret.age; };
+    convertxJwtSecret      = { file = ./convertx-jwt-secret.age; };
+    chiyogamiSecretKey     = { file = ./chiyogami-secret-key.age; };
   };
 
   services.postgresql = {
@@ -130,13 +123,14 @@
       PAPERLESS_DBNAME     = "paperless";
       PAPERLESS_DBUSER     = "paperless";
       PAPERLESS_REDIS      = "redis://127.0.0.1:6379";
-      PAPERLESS_SECRET_KEY = config.age.secrets.paperlessSecretKey.path;
     };
   };
 
+  systemd.services.paperless-web.serviceConfig.EnvironmentFile =
+    config.age.secrets.paperlessSecretKey.path;
+
   services.vaultwarden = {
     enable = true;
-
     config = {
       DOMAIN          = "https://vaultwarden.home";
       SIGNUPS_ALLOWED = true;
@@ -144,16 +138,11 @@
       ROCKET_PORT     = 8222;
       ROCKET_LOG      = "critical";
       DATABASE_URL    = "postgresql://vaultwarden@localhost/vaultwarden?host=/run/postgresql";
-      SMTP_PORT       = 587;
-      SMTP_SECURITY   = "starttls";
     };
   };
 
   systemd.services.vaultwarden.serviceConfig.EnvironmentFile = [
     config.age.secrets.vaultwardenAdminToken.path
-    config.age.secrets.vaultwardenSmtpPassword.path
-    config.age.secrets.smtpUsername.path
-    config.age.secrets.smtpPassword.path
   ];
 
   services.gitea = {
@@ -175,15 +164,7 @@
         HTTP_ADDR = "127.0.0.1";
         HTTP_PORT = 3001;
       };
-
       service.DISABLE_REGISTRATION = true;
-
-      mailer = {
-        ENABLED   = true;
-        PROTOCOL  = "smtp+starttls";
-        SMTP_PORT = 587;
-      };
-
       security.INSTALL_LOCK = true;
     };
 
