@@ -29,6 +29,7 @@
     sendSecret             = { file = ./send-secret.age; };
     convertxJwtSecret      = { file = ./convertx-jwt-secret.age; };
     chiyogamiSecretKey     = { file = ./chiyogami-secret-key.age; };
+    giteaSecretKey         = { file = ./gitea-secret-key.age; owner = "gitea"; };
   };
 
   services.postgresql = {
@@ -167,9 +168,10 @@
       service.DISABLE_REGISTRATION = true;
       security.INSTALL_LOCK = true;
     };
-
-    secretFile = config.age.secrets.giteaSecretKey.path;
   };
+
+  systemd.services.gitea.serviceConfig.EnvironmentFile =
+    config.age.secrets.giteaSecretKey.path;
 
   services.gatus = {
     enable = true;
