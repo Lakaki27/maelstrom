@@ -14,7 +14,8 @@
 
   networking.firewall = {
     enable          = true;
-    allowedTCPPorts = [ 80 443 ];
+    allowedUDPPorts = [ 53 ];
+    allowedTCPPorts = [ 80 443 53 ];
   };
 
   time.timeZone      = "Europe/Paris";
@@ -31,6 +32,16 @@
   };
 
   age.identityPaths = [ "/etc/age/server.key" ];
+
+  services.dnsmasq = {
+    enable = true;
+    settings = {
+      address         = "/.maelstrom.home/192.168.69.20";
+      listen-address  = [ "127.0.0.1" "192.168.69.20" ];
+      bind-interfaces = true;
+      no-resolv       = false;
+    };
+  };
 
   services.postgresql = {
     enable  = true;
@@ -78,14 +89,15 @@
 
       http = {
         routers = {
-          traefik     = { rule = "Host(`traefik.home`)";     entryPoints = ["websecure"]; tls = {}; service = "api@internal"; };
-          paperless   = { rule = "Host(`paperless.home`)";   entryPoints = ["websecure"]; tls = {}; service = "paperless"; };
-          vaultwarden = { rule = "Host(`vaultwarden.home`)"; entryPoints = ["websecure"]; tls = {}; service = "vaultwarden"; };
-          gitea       = { rule = "Host(`gitea.home`)";       entryPoints = ["websecure"]; tls = {}; service = "gitea"; };
-          gatus       = { rule = "Host(`gatus.home`)";       entryPoints = ["websecure"]; tls = {}; service = "gatus"; };
-          homepage    = { rule = "Host(`home.home`)";        entryPoints = ["websecure"]; tls = {}; service = "homepage"; };
-          wastebin    = { rule = "Host(`wastebin.home`)";    entryPoints = ["websecure"]; tls = {}; service = "wastebin"; };
-          convertx    = { rule = "Host(`convertx.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
+          traefik     = { rule = "Host(`traefik.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "api@internal"; };
+          paperless   = { rule = "Host(`paperless.maelstrom.home`)";   entryPoints = ["websecure"]; tls = {}; service = "paperless"; };
+          vaultwarden = { rule = "Host(`vaultwarden.maelstrom.home`)"; entryPoints = ["websecure"]; tls = {}; service = "vaultwarden"; };
+          gitea       = { rule = "Host(`gitea.maelstrom.home`)";       entryPoints = ["websecure"]; tls = {}; service = "gitea"; };
+          gatus       = { rule = "Host(`gatus.maelstrom.home`)";       entryPoints = ["websecure"]; tls = {}; service = "gatus"; };
+          homepage    = { rule = "Host(`home.maelstrom.home`)";        entryPoints = ["websecure"]; tls = {}; service = "homepage"; };
+          wastebin    = { rule = "Host(`wastebin.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "wastebin"; };
+          gokapi      = { rule = "Host(`gokapi.maelstrom.home`)";      entryPoints = ["websecure"]; tls = {}; service = "gokapi"; };
+          convertx    = { rule = "Host(`convertx.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
         };
 
         services = {
@@ -95,6 +107,7 @@
           gatus.loadBalancer.servers        = [{ url = "http://127.0.0.1:8090"; }];
           homepage.loadBalancer.servers     = [{ url = "http://127.0.0.1:8082"; }];
           wastebin.loadBalancer.servers     = [{ url = "http://127.0.0.1:8010"; }];
+          gokapi.loadBalancer.servers       = [{ url = "http://127.0.0.1:8080"; }];
           convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000"; }];
         };
       };
@@ -115,7 +128,7 @@
     passwordFile   = config.age.secrets.paperlessAdminPassword.path;
 
     settings = {
-      PAPERLESS_URL        = "https://paperless.home";
+      PAPERLESS_URL        = "https://paperless.maelstrom.home";
       PAPERLESS_TIME_ZONE  = "Europe/Paris";
       PAPERLESS_ADMIN_USER = "admin";
       PAPERLESS_DBHOST     = "/run/postgresql";
@@ -131,7 +144,7 @@
   services.vaultwarden = {
     enable = true;
     config = {
-      DOMAIN          = "https://vaultwarden.home";
+      DOMAIN          = "https://vaultwarden.maelstrom.home";
       SIGNUPS_ALLOWED = true;
       ROCKET_ADDRESS  = "127.0.0.1";
       ROCKET_PORT     = 8222;
@@ -159,8 +172,8 @@
 
     settings = {
       server = {
-        DOMAIN    = "gitea.home";
-        ROOT_URL  = "https://gitea.home";
+        DOMAIN    = "gitea.maelstrom.home";
+        ROOT_URL  = "https://gitea.maelstrom.home";
         HTTP_ADDR = "127.0.0.1";
         HTTP_PORT = 3001;
       };
@@ -181,13 +194,14 @@
       metrics      = true;
 
       endpoints = [
-        { name = "Traefik";     url = "https://traefik.home";     interval = "1m"; conditions = [ "[STATUS] < 400" ]; }
-        { name = "Paperless";   url = "https://paperless.home";   interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
-        { name = "Vaultwarden"; url = "https://vaultwarden.home"; interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
-        { name = "Gitea";       url = "https://gitea.home";       interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
-        { name = "Wastebin";    url = "https://wastebin.home";    interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
-        { name = "ConvertX";    url = "https://convertx.home";    interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
-        { name = "Homepage";    url = "https://home.home";        interval = "5m"; conditions = [ "[STATUS] == 200" ]; }
+        { name = "Traefik";     url = "https://traefik.maelstrom.home";     interval = "1m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Paperless";   url = "https://paperless.maelstrom.home";   interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
+        { name = "Vaultwarden"; url = "https://vaultwarden.maelstrom.home"; interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
+        { name = "Gitea";       url = "https://gitea.maelstrom.home";       interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
+        { name = "Wastebin";    url = "https://wastebin.maelstrom.home";    interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
+        { name = "Gokapi";      url = "https://gokapi.maelstrom.home";      interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
+        { name = "ConvertX";    url = "https://convertx.maelstrom.home";    interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Homepage";    url = "https://home.maelstrom.home";        interval = "5m"; conditions = [ "[STATUS] == 200" ]; }
       ];
     };
   };
@@ -211,20 +225,20 @@
 
     services = [
       { "Infrastructure" = [
-        { Traefik = { href = "https://traefik.home"; description = "Reverse proxy";     icon = "traefik.png"; }; }
-        { Gatus   = { href = "https://gatus.home";   description = "Uptime monitoring"; icon = "gatus.png";   }; }
+        { Traefik = { href = "https://traefik.maelstrom.home"; description = "Reverse proxy";     icon = "traefik.png"; }; }
+        { Gatus   = { href = "https://gatus.maelstrom.home";   description = "Uptime monitoring"; icon = "gatus.png";   }; }
       ]; }
       { "Files & Docs" = [
-        { Paperless = { href = "https://paperless.home"; description = "Document manager";  icon = "paperless-ngx.png"; }; }
-        { Gokapi    = { href = "https://gokapi.home";    description = "File sharing";      icon = "gokapi.png";        }; }
+        { Paperless = { href = "https://paperless.maelstrom.home"; description = "Document manager";  icon = "paperless-ngx.png"; }; }
+        { Gokapi    = { href = "https://gokapi.maelstrom.home";    description = "File sharing";      icon = "gokapi.png";        }; }
       ]; }
       { "Dev" = [
-        { Gitea    = { href = "https://gitea.home";    description = "Git forge"; icon = "gitea.png";     }; }
-        { Wastebin = { href = "https://wastebin.home"; description = "Pastebin";  icon = "wastebin.png";  }; }
+        { Gitea    = { href = "https://gitea.maelstrom.home";    description = "Git forge"; icon = "gitea.png";    }; }
+        { Wastebin = { href = "https://wastebin.maelstrom.home"; description = "Pastebin";  icon = "wastebin.png"; }; }
       ]; }
       { "Tools" = [
-        { Vaultwarden = { href = "https://vaultwarden.home"; description = "Password manager"; icon = "vaultwarden.png"; }; }
-        { ConvertX    = { href = "https://convertx.home";    description = "File converter";   icon = "convertx.png";    }; }
+        { Vaultwarden = { href = "https://vaultwarden.maelstrom.home"; description = "Password manager"; icon = "vaultwarden.png"; }; }
+        { ConvertX    = { href = "https://convertx.maelstrom.home";    description = "File converter";   icon = "convertx.png";    }; }
       ]; }
     ];
   };
@@ -235,10 +249,10 @@
     wantedBy    = [ "multi-user.target" ];
 
     environment = {
-      WASTEBIN_ADDRESS_PORT    = "127.0.0.1:8010";
-      WASTEBIN_BASE_URL        = "https://wastebin.home";
-      WASTEBIN_DATABASE_PATH   = "/mnt/data/wastebin/db.sqlite";
-      WASTEBIN_MAX_BODY_SIZE   = "4194304";
+      WASTEBIN_ADDRESS_PORT  = "127.0.0.1:8010";
+      WASTEBIN_BASE_URL      = "https://wastebin.maelstrom.home";
+      WASTEBIN_DATABASE_PATH = "/mnt/data/wastebin/db.sqlite";
+      WASTEBIN_MAX_BODY_SIZE = "4194304";
     };
 
     serviceConfig = {
@@ -267,18 +281,18 @@
     };
 
     serviceConfig = {
-      Type            = "simple";
-      ExecStart       = "${pkgs.convertx}/bin/convertx";
-      EnvironmentFile = config.age.secrets.convertxJwtSecret.path;
-      User            = "convertx";
-      Group           = "convertx";
+      Type             = "simple";
+      ExecStart        = "${pkgs.convertx}/bin/convertx";
+      EnvironmentFile  = config.age.secrets.convertxJwtSecret.path;
+      User             = "convertx";
+      Group            = "convertx";
+      WorkingDirectory = "/mnt/data/convertx";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
       ProtectHome     = true;
       PrivateTmp      = true;
       ReadWritePaths  = [ "/mnt/data/convertx" ];
-      WorkingDirectory = "/mnt/data/convertx";
     };
   };
 
@@ -317,13 +331,13 @@
     "d /mnt/data/gokapi             0750 gokapi    gokapi    -"
   ];
 
-  users.users.wastebin  = { isSystemUser = true; group = "wastebin";  };
-  users.users.convertx  = { isSystemUser = true; group = "convertx";  };
-  users.users.gokapi    = { isSystemUser = true; group = "gokapi";    };
+  users.users.wastebin = { isSystemUser = true; group = "wastebin"; };
+  users.users.convertx = { isSystemUser = true; group = "convertx"; };
+  users.users.gokapi   = { isSystemUser = true; group = "gokapi";   };
 
-  users.groups.wastebin  = {};
-  users.groups.convertx  = {};
-  users.groups.gokapi    = {};
+  users.groups.wastebin = {};
+  users.groups.convertx = {};
+  users.groups.gokapi   = {};
 
   users.users.maelstrom = {
     isNormalUser = true;
