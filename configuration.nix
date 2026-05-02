@@ -277,6 +277,7 @@
       ProtectHome     = true;
       PrivateTmp      = true;
       ReadWritePaths  = [ "/mnt/data/convertx" ];
+      WorkingDirectory = "/mnt/data/convertx";
     };
   };
 
