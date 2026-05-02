@@ -8,7 +8,7 @@ let
       owner  = "rhee876527";
       repo   = "chiyogami";
       rev    = "main";
-      sha256 = lib.fakeHash;
+      sha256 = "sha256-b/xslcP/djIEWOHipOqpbOaAgoSjSPmWJXV390QZlG4=";
     };
     vendorHash = lib.fakeHash;
   };
@@ -17,7 +17,7 @@ let
     owner  = "timvisee";
     repo   = "send";
     rev    = "master";
-    sha256 = lib.fakeHash;
+    sha256 = "sha256-tfntox8Sw3xzlCOJgY/LThThm+mptYY5BquYDjzHonQ=";
   };
 
   send-modules = pkgs.buildNpmPackage {
@@ -36,7 +36,7 @@ let
     owner  = "C4illin";
     repo   = "ConvertX";
     rev    = "main";
-    sha256 = lib.fakeHash;
+    sha256 = "sha256-CFnEyndqrzv0/mD/NLBELA+ywPpD2s26UiEhKboROG0=";
   };
 
 in
