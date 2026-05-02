@@ -1,33 +1,12 @@
 { config, pkgs, lib, ... }:
 
 let
-  send-src = pkgs.fetchFromGitHub {
-    owner  = "timvisee";
-    repo   = "send";
-    rev    = "master";
-    sha256 = "sha256-tfntox8Sw3xzlCOJgY/LThThm+mptYY5BquYDjzHonQ=";
-  };
-
-  send-modules = pkgs.buildNpmPackage {
-    pname                = "send";
-    version              = "unstable-2025";
-    src                  = send-src;
-    npmDepsHash          = "sha256-QInXcYpZcAOJMS6QFtIapftyWsqA80ef+OiKJ9XEs98=";
-    npmDepsFetcherVersion = 2;
-    dontNpmBuild         = true;
-    installPhase         = ''
-      mkdir -p $out
-      cp -r . $out/
-    '';
-  };
-
   convertx-src = pkgs.fetchFromGitHub {
     owner  = "C4illin";
     repo   = "ConvertX";
     rev    = "main";
     sha256 = "sha256-CFnEyndqrzv0/mD/NLBELA+ywPpD2s26UiEhKboROG0=";
   };
-
 in
 {
   imports = [ ./hardware-configuration.nix ];
@@ -55,7 +34,6 @@ in
     vaultwardenAdminToken  = { file = ./vaultwarden-admin-token.age; };
     traefikTlsCert         = { file = ./traefik-tls-cert.age; owner = "traefik"; path = "/run/traefik/tls.crt"; };
     traefikTlsKey          = { file = ./traefik-tls-key.age;  owner = "traefik"; path = "/run/traefik/tls.key"; mode = "0400"; };
-    sendSecret             = { file = ./send-secret.age; };
     convertxJwtSecret      = { file = ./convertx-jwt-secret.age; };
     giteaSecretKey         = { file = ./gitea-secret-key.age; owner = "gitea"; };
   };
@@ -116,7 +94,6 @@ in
           homepage    = { rule = "Host(`home.home`)";        entryPoints = ["websecure"]; tls = {}; service = "homepage"; };
           wastebin    = { rule = "Host(`wastebin.home`)";    entryPoints = ["websecure"]; tls = {}; service = "wastebin"; };
           convertx    = { rule = "Host(`convertx.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
-          send        = { rule = "Host(`send.home`)";        entryPoints = ["websecure"]; tls = {}; service = "send"; };
         };
 
         services = {
@@ -127,7 +104,6 @@ in
           homepage.loadBalancer.servers     = [{ url = "http://127.0.0.1:8082"; }];
           wastebin.loadBalancer.servers     = [{ url = "http://127.0.0.1:8010"; }];
           convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000"; }];
-          send.loadBalancer.servers         = [{ url = "http://127.0.0.1:1234"; }];
         };
       };
     };
@@ -219,7 +195,6 @@ in
         { name = "Gitea";       url = "https://gitea.home";       interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
         { name = "Wastebin";    url = "https://wastebin.home";    interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
         { name = "ConvertX";    url = "https://convertx.home";    interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
-        { name = "Send";        url = "https://send.home";        interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
         { name = "Homepage";    url = "https://home.home";        interval = "5m"; conditions = [ "[STATUS] == 200" ]; }
       ];
     };
@@ -249,7 +224,6 @@ in
       ]; }
       { "Files & Docs" = [
         { Paperless = { href = "https://paperless.home"; description = "Document manager";  icon = "paperless-ngx.png"; }; }
-        { Send      = { href = "https://send.home";      description = "Encrypted sharing"; icon = "send.png";          }; }
       ]; }
       { "Dev" = [
         { Gitea    = { href = "https://gitea.home";    description = "Git forge"; icon = "gitea.png";     }; }
@@ -315,37 +289,27 @@ in
     };
   };
 
-  systemd.services.send = {
-    description = "Send encrypted file sharing";
-    after       = [ "network.target" "redis-maelstrom.service" "agenix.service" ];
-    wants       = [ "redis-maelstrom.service" ];
+  systemd.services.gokapi = {
+    description = "Gokapi file sharing";
+    after       = [ "network.target" ];
     wantedBy    = [ "multi-user.target" ];
 
     environment = {
-      NODE_ENV             = "production";
-      BASE_URL             = "https://send.home";
-      PORT                 = "1234";
-      REDIS_HOST           = "127.0.0.1";
-      REDIS_PORT           = "6379";
-      FILE_DIR             = "/mnt/data/send/uploads";
-      MAX_FILE_SIZE        = "2147483648";
-      MAX_DOWNLOADS        = "20";
-      EXPIRE_TIMES_SECONDS = "86400,604800,2592000";
+      GOKAPI_PORT     = "8080";
+      GOKAPI_DATA_DIR = "/mnt/data/gokapi";
     };
 
     serviceConfig = {
-      Type             = "simple";
-      ExecStart        = "${pkgs.nodejs}/bin/node ${send-modules}/server/index.js";
-      EnvironmentFile  = config.age.secrets.sendSecret.path;
-      WorkingDirectory = "${send-modules}";
-      User             = "send";
-      Group            = "send";
+      Type           = "simple";
+      ExecStart      = "${pkgs.gokapi}/bin/gokapi";
+      User           = "gokapi";
+      Group          = "gokapi";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
       ProtectHome     = true;
       PrivateTmp      = true;
-      ReadWritePaths  = [ "/mnt/data/send" ];
+      ReadWritePaths  = [ "/mnt/data/gokapi" ];
     };
   };
 
@@ -357,17 +321,16 @@ in
     "d /mnt/data/gitea              0750 gitea     gitea     -"
     "d /mnt/data/wastebin           0750 wastebin  wastebin  -"
     "d /mnt/data/convertx           0750 convertx  convertx  -"
-    "d /mnt/data/send               0750 send      send      -"
-    "d /mnt/data/send/uploads       0750 send      send      -"
+    "d /mnt/data/gokapi             0750 gokapi    gokapi    -"
   ];
 
   users.users.wastebin  = { isSystemUser = true; group = "wastebin";  };
   users.users.convertx  = { isSystemUser = true; group = "convertx";  };
-  users.users.send      = { isSystemUser = true; group = "send";      };
+  users.users.gokapi    = { isSystemUser = true; group = "gokapi";    };
 
   users.groups.wastebin  = {};
   users.groups.convertx  = {};
-  users.groups.send       = {};
+  users.groups.gokapi    = {};
 
   users.users.maelstrom = {
     isNormalUser = true;
