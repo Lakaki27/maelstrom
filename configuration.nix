@@ -216,6 +216,7 @@
       ]; }
       { "Files & Docs" = [
         { Paperless = { href = "https://paperless.home"; description = "Document manager";  icon = "paperless-ngx.png"; }; }
+        { Gokapi    = { href = "https://gokapi.home";    description = "File sharing";      icon = "gokapi.png";        }; }
       ]; }
       { "Dev" = [
         { Gitea    = { href = "https://gitea.home";    description = "Git forge"; icon = "gitea.png";     }; }
