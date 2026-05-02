@@ -327,7 +327,7 @@
     "d /mnt/data/send/uploads       0750 send      send      -"
   ];
 
-  users.users.admin = {
+  users.users.maelstrom = {
     isNormalUser = true;
     extraGroups  = [ "wheel" ];
     openssh.authorizedKeys.keys = [
