@@ -1,5 +1,45 @@
 { config, pkgs, lib, ... }:
 
+let
+  chiyogami = pkgs.buildGoModule {
+    pname   = "chiyogami";
+    version = "unstable-2025";
+    src = pkgs.fetchFromGitHub {
+      owner  = "rhee876527";
+      repo   = "chiyogami";
+      rev    = "main";
+      sha256 = lib.fakeHash;
+    };
+    vendorHash = lib.fakeHash;
+  };
+
+  send-src = pkgs.fetchFromGitHub {
+    owner  = "timvisee";
+    repo   = "send";
+    rev    = "master";
+    sha256 = lib.fakeHash;
+  };
+
+  send-modules = pkgs.buildNpmPackage {
+    pname   = "send";
+    version = "unstable-2025";
+    src     = send-src;
+    npmDepsHash = lib.fakeHash;
+    dontNpmBuild = true;
+    installPhase = ''
+      mkdir -p $out
+      cp -r . $out/
+    '';
+  };
+
+  convertx-src = pkgs.fetchFromGitHub {
+    owner  = "C4illin";
+    repo   = "ConvertX";
+    rev    = "main";
+    sha256 = lib.fakeHash;
+  };
+
+in
 {
   imports = [ ./hardware-configuration.nix ];
 
@@ -35,8 +75,8 @@
   age.identityPaths = [ "/etc/age/server.key" ];
 
   services.postgresql = {
-    enable   = true;
-    package  = pkgs.postgresql_17;
+    enable  = true;
+    package = pkgs.postgresql_17;
 
     ensureDatabases = [ "paperless" "vaultwarden" "gitea" ];
 
@@ -169,7 +209,7 @@
         HTTP_PORT = 3001;
       };
       service.DISABLE_REGISTRATION = true;
-      security.INSTALL_LOCK = true;
+      security.INSTALL_LOCK        = true;
     };
   };
 
@@ -245,10 +285,12 @@
     };
 
     serviceConfig = {
-      Type            = "simple";
-      ExecStart       = "/opt/chiyogami/chiyogami";
-      EnvironmentFile = config.age.secrets.chiyogamiSecretKey.path;
-      WorkingDirectory = "/opt/chiyogami";
+      Type             = "simple";
+      ExecStart        = "${chiyogami}/bin/chiyogami";
+      EnvironmentFile  = config.age.secrets.chiyogamiSecretKey.path;
+      WorkingDirectory = "${chiyogami}/bin";
+      User             = "chiyogami";
+      Group            = "chiyogami";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
@@ -270,9 +312,12 @@
     };
 
     serviceConfig = {
-      Type            = "simple";
-      ExecStart       = "/opt/convertx/convertx";
-      EnvironmentFile = config.age.secrets.convertxJwtSecret.path;
+      Type             = "simple";
+      ExecStart        = "${pkgs.bun}/bin/bun run ${convertx-src}/src/index.ts";
+      EnvironmentFile  = config.age.secrets.convertxJwtSecret.path;
+      WorkingDirectory = "${convertx-src}";
+      User             = "convertx";
+      Group            = "convertx";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
@@ -302,9 +347,11 @@
 
     serviceConfig = {
       Type             = "simple";
-      WorkingDirectory = "/opt/send";
-      ExecStart        = "${pkgs.nodejs}/bin/node /opt/send/server/index.js";
+      ExecStart        = "${pkgs.nodejs}/bin/node ${send-modules}/server/index.js";
       EnvironmentFile  = config.age.secrets.sendSecret.path;
+      WorkingDirectory = "${send-modules}";
+      User             = "send";
+      Group            = "send";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
@@ -326,6 +373,14 @@
     "d /mnt/data/send/uploads       0750 send      send      -"
   ];
 
+  users.users.chiyogami = { isSystemUser = true; group = "chiyogami"; };
+  users.users.convertx  = { isSystemUser = true; group = "convertx";  };
+  users.users.send      = { isSystemUser = true; group = "send";      };
+
+  users.groups.chiyogami = {};
+  users.groups.convertx  = {};
+  users.groups.send       = {};
+
   users.users.maelstrom = {
     isNormalUser = true;
     extraGroups  = [ "wheel" ];
@@ -333,14 +388,6 @@
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG/4M8fggqYWUdoG8DiWKLIhNWNmy7djUc9+FS/jI7LG leo@starborne"
     ];
   };
-
-  users.users.chiyogami = { isSystemUser = true; group = "chiyogami"; };
-  users.users.convertx  = { isSystemUser = true; group = "convertx";  };
-  users.users.send      = { isSystemUser = true; group = "send";      };
-
-  users.groups.chiyogami = {};
-  users.groups.convertx  = {};
-  users.groups.send      = {};
 
   services.openssh = {
     enable = true;
@@ -351,15 +398,7 @@
   };
 
   environment.systemPackages = with pkgs; [
-    git
-    htop
-    curl
-    wget
-    jq
-    age
-    smartmontools
-    lsof
-    nodejs
+    git htop curl wget jq age smartmontools lsof nodejs
   ];
 
   system.autoUpgrade = {
