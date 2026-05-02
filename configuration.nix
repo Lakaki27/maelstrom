@@ -275,7 +275,7 @@ in
 
     serviceConfig = {
       Type             = "simple";
-      ExecStart        = "${pkgs.bun}/bin/bun run ${convertx-src}/src/index.ts";
+      ExecStart        = "${pkgs.bun}/bin/bun run ${convertx-src}/src/index.tsx";
       EnvironmentFile  = config.age.secrets.convertxJwtSecret.path;
       WorkingDirectory = "${convertx-src}";
       User             = "convertx";
