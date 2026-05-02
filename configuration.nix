@@ -12,7 +12,7 @@ let
     pname                = "send";
     version              = "unstable-2025";
     src                  = send-src;
-    npmDepsHash          = lib.fakeHash;
+    npmDepsHash          = "sha256-QInXcYpZcAOJMS6QFtIapftyWsqA80ef+OiKJ9XEs98=";
     npmDepsFetcherVersion = 2;
     dontNpmBuild         = true;
     installPhase         = ''
