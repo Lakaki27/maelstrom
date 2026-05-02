@@ -2,7 +2,7 @@
 
 let
   chiyogami = pkgs.buildGoModule {
-    pname   = "chiyogami";
+    name   = "chiyogami";
     version = "unstable-2025";
     src = pkgs.fetchFromGitHub {
       owner  = "rhee876527";
@@ -10,7 +10,8 @@ let
       rev    = "main";
       sha256 = "sha256-b/xslcP/djIEWOHipOqpbOaAgoSjSPmWJXV390QZlG4=";
     };
-    vendorHash = lib.fakeHash;
+    vendorHash  = lib.fakeHash;
+    GOTOOLCHAIN = "auto";
   };
 
   send-src = pkgs.fetchFromGitHub {
