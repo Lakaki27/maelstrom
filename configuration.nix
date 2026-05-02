@@ -210,10 +210,6 @@
     enable     = true;
     listenPort = 8082;
 
-    environment = {
-      HOMEPAGE_ALLOWED_HOSTS = "home.maelstrom.home";
-    };
-
     settings = {
       title       = "maelstrom";
       theme       = "dark";
@@ -245,6 +241,10 @@
         { ConvertX    = { href = "https://convertx.maelstrom.home";    description = "File converter";   icon = "convertx.png";    }; }
       ]; }
     ];
+  };
+
+  systemd.services.homepage-dashboard.environment = {
+    HOMEPAGE_ALLOWED_HOSTS = "home.maelstrom.home";
   };
 
   systemd.services.wastebin = {
