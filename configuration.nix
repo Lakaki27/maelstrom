@@ -140,6 +140,7 @@
       ROCKET_LOG      = "critical";
       DATABASE_URL    = "postgresql://vaultwarden@localhost/vaultwarden?host=/run/postgresql";
     };
+    dbBackend = "postgresql";
   };
 
   systemd.services.vaultwarden.serviceConfig.EnvironmentFile = [
@@ -357,7 +358,7 @@
   system.autoUpgrade = {
     enable      = true;
     flake       = "github:lakaki27/maelstrom#maelstrom";
-    flags       = [ "--update-input" "nixpkgs" ];
+    flags       = [ "--update-input" "nixpkgs" "--no-write-lock-file" ];
     dates       = "04:00";
     allowReboot = false;
   };
