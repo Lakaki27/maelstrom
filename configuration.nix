@@ -1,20 +1,6 @@
 { config, pkgs, lib, ... }:
 
 let
-  chiyogami = (pkgs.buildGoModule {
-    pname   = "chiyogami";
-    version = "unstable-2025";
-    src = pkgs.fetchFromGitHub {
-        owner  = "rhee876527";
-        repo   = "chiyogami";
-        rev    = "main";
-        sha256 = "sha256-b/xslcP/djIEWOHipOqpbOaAgoSjSPmWJXV390QZlG4=";
-    };
-    vendorHash = lib.fakeHash;
-  }).overrideAttrs (old: {
-    GOTOOLCHAIN = "auto";
-  });
-
   send-src = pkgs.fetchFromGitHub {
     owner  = "timvisee";
     repo   = "send";
@@ -23,10 +9,10 @@ let
   };
 
   send-modules = pkgs.buildNpmPackage {
-    pname   = "send";
-    version = "unstable-2025";
-    src     = send-src;
-    npmDepsHash = lib.fakeHash;
+    pname        = "send";
+    version      = "unstable-2025";
+    src          = send-src;
+    npmDepsHash  = lib.fakeHash;
     dontNpmBuild = true;
     installPhase = ''
       mkdir -p $out
@@ -70,7 +56,6 @@ in
     traefikTlsKey          = { file = ./traefik-tls-key.age;  owner = "traefik"; path = "/run/traefik/tls.key"; mode = "0400"; };
     sendSecret             = { file = ./send-secret.age; };
     convertxJwtSecret      = { file = ./convertx-jwt-secret.age; };
-    chiyogamiSecretKey     = { file = ./chiyogami-secret-key.age; };
     giteaSecretKey         = { file = ./gitea-secret-key.age; owner = "gitea"; };
   };
 
@@ -128,7 +113,7 @@ in
           gitea       = { rule = "Host(`gitea.home`)";       entryPoints = ["websecure"]; tls = {}; service = "gitea"; };
           gatus       = { rule = "Host(`gatus.home`)";       entryPoints = ["websecure"]; tls = {}; service = "gatus"; };
           homepage    = { rule = "Host(`home.home`)";        entryPoints = ["websecure"]; tls = {}; service = "homepage"; };
-          chiyogami   = { rule = "Host(`chiyogami.home`)";   entryPoints = ["websecure"]; tls = {}; service = "chiyogami"; };
+          wastebin    = { rule = "Host(`wastebin.home`)";    entryPoints = ["websecure"]; tls = {}; service = "wastebin"; };
           convertx    = { rule = "Host(`convertx.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
           send        = { rule = "Host(`send.home`)";        entryPoints = ["websecure"]; tls = {}; service = "send"; };
         };
@@ -139,7 +124,7 @@ in
           gitea.loadBalancer.servers        = [{ url = "http://127.0.0.1:3001"; }];
           gatus.loadBalancer.servers        = [{ url = "http://127.0.0.1:8090"; }];
           homepage.loadBalancer.servers     = [{ url = "http://127.0.0.1:8082"; }];
-          chiyogami.loadBalancer.servers    = [{ url = "http://127.0.0.1:8010"; }];
+          wastebin.loadBalancer.servers     = [{ url = "http://127.0.0.1:8010"; }];
           convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000"; }];
           send.loadBalancer.servers         = [{ url = "http://127.0.0.1:1234"; }];
         };
@@ -231,7 +216,7 @@ in
         { name = "Paperless";   url = "https://paperless.home";   interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
         { name = "Vaultwarden"; url = "https://vaultwarden.home"; interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
         { name = "Gitea";       url = "https://gitea.home";       interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
-        { name = "Chiyogami";   url = "https://chiyogami.home";   interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
+        { name = "Wastebin";    url = "https://wastebin.home";    interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
         { name = "ConvertX";    url = "https://convertx.home";    interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Send";        url = "https://send.home";        interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
         { name = "Homepage";    url = "https://home.home";        interval = "5m"; conditions = [ "[STATUS] == 200" ]; }
@@ -266,8 +251,8 @@ in
         { Send      = { href = "https://send.home";      description = "Encrypted sharing"; icon = "send.png";          }; }
       ]; }
       { "Dev" = [
-        { Gitea     = { href = "https://gitea.home";     description = "Git forge"; icon = "gitea.png";    }; }
-        { Chiyogami = { href = "https://chiyogami.home"; description = "Pastebin";  icon = "pastebin.png"; }; }
+        { Gitea    = { href = "https://gitea.home";    description = "Git forge"; icon = "gitea.png";     }; }
+        { Wastebin = { href = "https://wastebin.home"; description = "Pastebin";  icon = "wastebin.png";  }; }
       ]; }
       { "Tools" = [
         { Vaultwarden = { href = "https://vaultwarden.home"; description = "Password manager"; icon = "vaultwarden.png"; }; }
@@ -276,29 +261,29 @@ in
     ];
   };
 
-  systemd.services.chiyogami = {
-    description = "Chiyogami pastebin";
-    after       = [ "network.target" "agenix.service" ];
+  systemd.services.wastebin = {
+    description = "Wastebin pastebin";
+    after       = [ "network.target" ];
     wantedBy    = [ "multi-user.target" ];
 
     environment = {
-      PORT     = "8010";
-      DATA_DIR = "/mnt/data/chiyogami";
+      WASTEBIN_ADDRESS_PORT    = "127.0.0.1:8010";
+      WASTEBIN_BASE_URL        = "https://wastebin.home";
+      WASTEBIN_DATABASE_PATH   = "/mnt/data/wastebin/db.sqlite";
+      WASTEBIN_MAX_BODY_SIZE   = "4194304";
     };
 
     serviceConfig = {
-      Type             = "simple";
-      ExecStart        = "${chiyogami}/bin/chiyogami";
-      EnvironmentFile  = config.age.secrets.chiyogamiSecretKey.path;
-      WorkingDirectory = "${chiyogami}/bin";
-      User             = "chiyogami";
-      Group            = "chiyogami";
+      Type           = "simple";
+      ExecStart      = "${pkgs.wastebin}/bin/wastebin";
+      User           = "wastebin";
+      Group          = "wastebin";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
       ProtectHome     = true;
       PrivateTmp      = true;
-      ReadWritePaths  = [ "/mnt/data/chiyogami" ];
+      ReadWritePaths  = [ "/mnt/data/wastebin" ];
     };
   };
 
@@ -369,17 +354,17 @@ in
     "d /mnt/data/paperless/media    0750 paperless paperless -"
     "d /mnt/data/paperless/consume  0750 paperless paperless -"
     "d /mnt/data/gitea              0750 gitea     gitea     -"
-    "d /mnt/data/chiyogami          0750 chiyogami chiyogami -"
+    "d /mnt/data/wastebin           0750 wastebin  wastebin  -"
     "d /mnt/data/convertx           0750 convertx  convertx  -"
     "d /mnt/data/send               0750 send      send      -"
     "d /mnt/data/send/uploads       0750 send      send      -"
   ];
 
-  users.users.chiyogami = { isSystemUser = true; group = "chiyogami"; };
+  users.users.wastebin  = { isSystemUser = true; group = "wastebin";  };
   users.users.convertx  = { isSystemUser = true; group = "convertx";  };
   users.users.send      = { isSystemUser = true; group = "send";      };
 
-  users.groups.chiyogami = {};
+  users.groups.wastebin  = {};
   users.groups.convertx  = {};
   users.groups.send       = {};
 
