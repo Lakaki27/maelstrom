@@ -9,12 +9,13 @@ let
   };
 
   send-modules = pkgs.buildNpmPackage {
-    pname        = "send";
-    version      = "unstable-2025";
-    src          = send-src;
-    npmDepsHash  = "sha256-ZVegUECrwkn/DlAwqx5VDmcwEIJV/jAAV99Dq29Tm2w=";
-    dontNpmBuild = true;
-    installPhase = ''
+    pname                = "send";
+    version              = "unstable-2025";
+    src                  = send-src;
+    npmDepsHash          = lib.fakeHash;
+    npmDepsFetcherVersion = 2;
+    dontNpmBuild         = true;
+    installPhase         = ''
       mkdir -p $out
       cp -r . $out/
     '';
