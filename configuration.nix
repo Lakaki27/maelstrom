@@ -210,6 +210,10 @@
     enable     = true;
     listenPort = 8082;
 
+    environment = {
+      HOMEPAGE_ALLOWED_HOSTS = "home.maelstrom.home";
+    };
+
     settings = {
       title       = "maelstrom";
       theme       = "dark";
