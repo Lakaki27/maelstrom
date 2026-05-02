@@ -12,7 +12,7 @@ let
     pname        = "send";
     version      = "unstable-2025";
     src          = send-src;
-    npmDepsHash  = lib.fakeHash;
+    npmDepsHash  = "sha256-ZVegUECrwkn/DlAwqx5VDmcwEIJV/jAAV99Dq29Tm2w=";
     dontNpmBuild = true;
     installPhase = ''
       mkdir -p $out
