@@ -1,18 +1,19 @@
 { config, pkgs, lib, ... }:
 
 let
-  chiyogami = pkgs.buildGoModule {
-    name   = "chiyogami";
+  chiyogami = (pkgs.buildGoModule {
+    pname   = "chiyogami";
     version = "unstable-2025";
     src = pkgs.fetchFromGitHub {
-      owner  = "rhee876527";
-      repo   = "chiyogami";
-      rev    = "main";
-      sha256 = "sha256-b/xslcP/djIEWOHipOqpbOaAgoSjSPmWJXV390QZlG4=";
+        owner  = "rhee876527";
+        repo   = "chiyogami";
+        rev    = "main";
+        sha256 = "sha256-b/xslcP/djIEWOHipOqpbOaAgoSjSPmWJXV390QZlG4=";
     };
-    vendorHash  = lib.fakeHash;
+    vendorHash = lib.fakeHash;
+  }).overrideAttrs (old: {
     GOTOOLCHAIN = "auto";
-  };
+  });
 
   send-src = pkgs.fetchFromGitHub {
     owner  = "timvisee";
