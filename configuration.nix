@@ -249,7 +249,6 @@
       ExecStart       = "/opt/chiyogami/chiyogami";
       EnvironmentFile = config.age.secrets.chiyogamiSecretKey.path;
       WorkingDirectory = "/opt/chiyogami";
-      DynamicUser     = true;
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
@@ -274,7 +273,6 @@
       Type            = "simple";
       ExecStart       = "/opt/convertx/convertx";
       EnvironmentFile = config.age.secrets.convertxJwtSecret.path;
-      DynamicUser     = true;
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
@@ -307,7 +305,6 @@
       WorkingDirectory = "/opt/send";
       ExecStart        = "${pkgs.nodejs}/bin/node /opt/send/server/index.js";
       EnvironmentFile  = config.age.secrets.sendSecret.path;
-      DynamicUser      = true;
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
