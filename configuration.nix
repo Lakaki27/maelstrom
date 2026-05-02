@@ -1,13 +1,5 @@
 { config, pkgs, lib, ... }:
 
-let
-  convertx-src = pkgs.fetchFromGitHub {
-    owner  = "C4illin";
-    repo   = "ConvertX";
-    rev    = "main";
-    sha256 = "sha256-CFnEyndqrzv0/mD/NLBELA+ywPpD2s26UiEhKboROG0=";
-  };
-in
 {
   imports = [ ./hardware-configuration.nix ];
 
@@ -274,12 +266,11 @@ in
     };
 
     serviceConfig = {
-      Type             = "simple";
-      ExecStart        = "${pkgs.bun}/bin/bun run ${convertx-src}/src/index.tsx";
-      EnvironmentFile  = config.age.secrets.convertxJwtSecret.path;
-      WorkingDirectory = "${convertx-src}";
-      User             = "convertx";
-      Group            = "convertx";
+      Type            = "simple";
+      ExecStart       = "${pkgs.convertx}/bin/convertx";
+      EnvironmentFile = config.age.secrets.convertxJwtSecret.path;
+      User            = "convertx";
+      Group           = "convertx";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
