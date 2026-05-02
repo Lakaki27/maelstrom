@@ -1,5 +1,5 @@
 let
-  server = "age1wwy6kl3utq66tghq34aq30vxmtrqq0kfa505yf2n9kryn89s8dyqvy5u3j";
+  server = "age1rh8v46hcxj9jcl0nqruw9fny75dd0xlqgakychjh477atnvwwswslu3nd6";
   host   = "age195kkgkst85dahhg0hlunfw2g8v8dqpma2eggtvn2cnrrvwy8hcgqnp5z56";
   all    = [ server host ];
 in

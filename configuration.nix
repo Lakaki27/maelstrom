@@ -32,6 +32,8 @@
     giteaSecretKey         = { file = ./gitea-secret-key.age; owner = "gitea"; };
   };
 
+  age.identityPaths = [ "/etc/age/server.key" ];
+
   services.postgresql = {
     enable   = true;
     package  = pkgs.postgresql_17;
