@@ -337,6 +337,14 @@
     ];
   };
 
+  users.users.chiyogami = { isSystemUser = true; group = "chiyogami"; };
+  users.users.convertx  = { isSystemUser = true; group = "convertx";  };
+  users.users.send      = { isSystemUser = true; group = "send";      };
+
+  users.groups.chiyogami = {};
+  users.groups.convertx  = {};
+  users.groups.send      = {};
+
   services.openssh = {
     enable = true;
     settings = {
