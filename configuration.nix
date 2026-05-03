@@ -244,7 +244,7 @@
   };
 
   systemd.services.homepage-dashboard.environment = {
-    HOMEPAGE_ALLOWED_HOSTS = "home.maelstrom.home";
+    HOMEPAGE_ALLOWED_HOSTS = lib.mkForce "home.maelstrom.home,127.0.0.1:8082,localhost:8082";
   };
 
   systemd.services.wastebin = {
