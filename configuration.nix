@@ -195,13 +195,13 @@
 
       endpoints = [
         { name = "Traefik";     url = "https://traefik.maelstrom.home";     interval = "1m"; conditions = [ "[STATUS] < 400" ]; }
-        { name = "Paperless";   url = "https://paperless.maelstrom.home";   interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
-        { name = "Vaultwarden"; url = "https://vaultwarden.maelstrom.home"; interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
-        { name = "Gitea";       url = "https://gitea.maelstrom.home";       interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
-        { name = "Wastebin";    url = "https://wastebin.maelstrom.home";    interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
-        { name = "Gokapi";      url = "https://gokapi.maelstrom.home";      interval = "2m"; conditions = [ "[STATUS] == 200" ]; }
+        { name = "Paperless";   url = "https://paperless.maelstrom.home";   interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Vaultwarden"; url = "https://vaultwarden.maelstrom.home"; interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Gitea";       url = "https://gitea.maelstrom.home";       interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Wastebin";    url = "https://wastebin.maelstrom.home";    interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Gokapi";      url = "https://gokapi.maelstrom.home";      interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "ConvertX";    url = "https://convertx.maelstrom.home";    interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
-        { name = "Homepage";    url = "https://home.maelstrom.home";        interval = "5m"; conditions = [ "[STATUS] == 200" ]; }
+        { name = "Homepage";    url = "https://home.maelstrom.home";        interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
       ];
     };
   };
@@ -321,6 +321,7 @@
       ProtectHome     = true;
       PrivateTmp      = true;
       ReadWritePaths  = [ "/mnt/data/gokapi" ];
+      WorkingDirectory = "/mnt/data/gokapi";
     };
   };
 
