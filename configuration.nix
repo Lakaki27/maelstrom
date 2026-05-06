@@ -33,6 +33,9 @@
 
   age.identityPaths = [ "/etc/age/server.key" ];
 
+  # Temp blackcandy
+  virtualisation.docker.enable = true;
+
   services.dnsmasq = {
     enable = true;
     settings = {
@@ -230,7 +233,7 @@
       ]; }
       { "Files & Docs" = [
         { Paperless = { href = "https://paperless.maelstrom.home"; description = "Document manager";  icon = "paperless-ngx.png"; }; }
-        { Gokapi    = { href = "https://gokapi.maelstrom.home";    description = "File sharing";      icon = "gokapi.png";        }; }
+        { Gokapi    = { href = "https://gokapi.maelstrom.home/admin";    description = "File sharing";      icon = "gokapi.png";        }; }
       ]; }
       { "Dev" = [
         { Gitea    = { href = "https://gitea.maelstrom.home";    description = "Git forge"; icon = "gitea.png";    }; }
