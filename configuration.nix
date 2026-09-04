@@ -141,8 +141,8 @@
     };
   };
 
-  systemd.services.paperless-web.serviceConfig.EnvironmentFile =
-    config.age.secrets.paperlessSecretKey.path;
+  # systemd.services.paperless-web.serviceConfig.EnvironmentFile =
+  #   config.age.secrets.paperlessSecretKey.path;
 
   services.vaultwarden = {
     enable = true;
