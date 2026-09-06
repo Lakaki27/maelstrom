@@ -50,12 +50,13 @@
     enable  = true;
     package = pkgs.postgresql_17;
 
-    ensureDatabases = [ "paperless" "vaultwarden" "gitea" ];
+    ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" ];
 
     ensureUsers = [
       { name = "paperless";   ensureDBOwnership = true; }
       { name = "vaultwarden"; ensureDBOwnership = true; }
       { name = "gitea";       ensureDBOwnership = true; }
+      { name = "riptide";     ensureDBOwnership = true; }
     ];
 
     settings.listen_addresses = "localhost";
@@ -101,17 +102,20 @@
           wastebin    = { rule = "Host(`wastebin.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "wastebin"; };
           gokapi      = { rule = "Host(`gokapi.maelstrom.home`)";      entryPoints = ["websecure"]; tls = {}; service = "gokapi"; };
           convertx    = { rule = "Host(`convertx.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
+          riptide     = { rule = "Host(`music.maelstrom.home`)";       entryPoints = ["websecure"]; tls = {}; service = "riptide"; };
+
         };
 
         services = {
-          paperless.loadBalancer.servers   = [{ url = "http://127.0.0.1:28981"; }];
-          vaultwarden.loadBalancer.servers  = [{ url = "http://127.0.0.1:8222"; }];
-          gitea.loadBalancer.servers        = [{ url = "http://127.0.0.1:3001"; }];
-          gatus.loadBalancer.servers        = [{ url = "http://127.0.0.1:8090"; }];
-          homepage.loadBalancer.servers     = [{ url = "http://127.0.0.1:8082"; }];
-          wastebin.loadBalancer.servers     = [{ url = "http://127.0.0.1:8010"; }];
-          gokapi.loadBalancer.servers       = [{ url = "http://127.0.0.1:8080"; }];
-          convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000"; }];
+          paperless.loadBalancer.servers    = [{ url = "http://127.0.0.1:28981"; }];
+          vaultwarden.loadBalancer.servers  = [{ url = "http://127.0.0.1:8222";  }];
+          gitea.loadBalancer.servers        = [{ url = "http://127.0.0.1:3001";  }];
+          gatus.loadBalancer.servers        = [{ url = "http://127.0.0.1:8090";  }];
+          homepage.loadBalancer.servers     = [{ url = "http://127.0.0.1:8082";  }];
+          wastebin.loadBalancer.servers     = [{ url = "http://127.0.0.1:8010";  }];
+          gokapi.loadBalancer.servers       = [{ url = "http://127.0.0.1:8080";  }];
+          convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000";  }];
+          riptide.loadBalancer.servers      = [{ url = "http://127.0.0.1:28983"; }];
         };
       };
     };
@@ -226,6 +230,65 @@
       };
     };
 
+    virtualisation.oci-containers.containers = {
+      riptide-backend = {
+        image = "riptide-backend:latest";
+        autoStart = true;
+        extraOptions = [ "--network=riptide-net" ];
+        environmentFiles = [ config.age.secrets.riptideEnv.path ];
+        environment = {
+          DB_HOST = "host.docker.internal";
+          DB_PORT = "5432";
+          DB_USER = "riptide";
+          DB_NAME = "riptide";
+          S3_ENDPOINT = "http://riptide-rustfs:9000";
+          S3_PUBLIC_ENDPOINT = "https://music.maelstrom.home";
+          S3_REGION = "us-east-1";
+          S3_BUCKET = "media";
+          AUTH_ENABLED = "true";
+        };
+        extraOptions = [
+          "--network=riptide-net"
+          "--add-host=host.docker.internal:host-gateway"
+        ];
+      };
+
+      riptide-frontend = {
+        image = "riptide-frontend:latest";
+        autoStart = true;
+        extraOptions = [ "--network=riptide-net" ];
+        environment.PUBLIC_API_BASE_URL = "https://music.maelstrom.home/api";
+      };
+
+      riptide-rustfs = {
+        image = "rustfs/rustfs:latest";
+        autoStart = true;
+        extraOptions = [ "--network=riptide-net" ];
+        volumes = [ "/mnt/data/riptide/rustfs:/data" ];
+        environmentFiles = [ config.age.secrets.riptideEnv.path ];
+        environment.RUSTFS_CONSOLE_ENABLE = "true";
+      };
+
+      riptide-nginx = {
+        image = "nginx:1.30-alpine";
+        autoStart = true;
+        ports = [ "127.0.0.1:28983:5173" ];
+        extraOptions = [ "--network=riptide-net" ];
+        volumes = [ "/mnt/data/riptide/nginx.conf:/etc/nginx/conf.d/default.conf:ro" ];
+      };
+    };
+
+    systemd.services.docker-network-riptide-net = {
+      description = "Create riptide-net docker network";
+      after = [ "docker.service" ];
+      wantedBy = [ "multi-user.target" ];
+      serviceConfig.Type = "oneshot";
+      script = ''
+        ${pkgs.docker}/bin/docker network inspect riptide-net >/dev/null 2>&1 || \
+        ${pkgs.docker}/bin/docker network create riptide-net
+      '';
+    };
+
     services = [
       { "Infrastructure" = [
         { Traefik = { href = "https://traefik.maelstrom.home"; description = "Reverse proxy";     icon = "traefik.png"; }; }
@@ -337,6 +400,8 @@
     "d /mnt/data/wastebin           0750 wastebin  wastebin  -"
     "d /mnt/data/convertx           0750 convertx  convertx  -"
     "d /mnt/data/gokapi             0750 gokapi    gokapi    -"
+    "d /mnt/data/riptide         0750 root root -"
+    "d /mnt/data/riptide/rustfs  0750 root root -"
   ];
 
   users.users.wastebin = { isSystemUser = true; group = "wastebin"; };
