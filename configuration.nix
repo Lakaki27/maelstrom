@@ -29,6 +29,7 @@
     traefikTlsKey          = { file = ./traefik-tls-key.age;  owner = "traefik"; path = "/run/traefik/tls.key"; mode = "0400"; };
     convertxJwtSecret      = { file = ./convertx-jwt-secret.age; };
     giteaSecretKey         = { file = ./gitea-secret-key.age; owner = "gitea"; };
+    riptideEnv             = { file = ./riptide-env.age; };
   };
 
   age.identityPaths = [ "/etc/age/server.key" ];
@@ -230,65 +231,6 @@
       };
     };
 
-    virtualisation.oci-containers.containers = {
-      riptide-backend = {
-        image = "riptide-backend:latest";
-        autoStart = true;
-        extraOptions = [ "--network=riptide-net" ];
-        environmentFiles = [ config.age.secrets.riptideEnv.path ];
-        environment = {
-          DB_HOST = "host.docker.internal";
-          DB_PORT = "5432";
-          DB_USER = "riptide";
-          DB_NAME = "riptide";
-          S3_ENDPOINT = "http://riptide-rustfs:9000";
-          S3_PUBLIC_ENDPOINT = "https://music.maelstrom.home";
-          S3_REGION = "us-east-1";
-          S3_BUCKET = "media";
-          AUTH_ENABLED = "true";
-        };
-        extraOptions = [
-          "--network=riptide-net"
-          "--add-host=host.docker.internal:host-gateway"
-        ];
-      };
-
-      riptide-frontend = {
-        image = "riptide-frontend:latest";
-        autoStart = true;
-        extraOptions = [ "--network=riptide-net" ];
-        environment.PUBLIC_API_BASE_URL = "https://music.maelstrom.home/api";
-      };
-
-      riptide-rustfs = {
-        image = "rustfs/rustfs:latest";
-        autoStart = true;
-        extraOptions = [ "--network=riptide-net" ];
-        volumes = [ "/mnt/data/riptide/rustfs:/data" ];
-        environmentFiles = [ config.age.secrets.riptideEnv.path ];
-        environment.RUSTFS_CONSOLE_ENABLE = "true";
-      };
-
-      riptide-nginx = {
-        image = "nginx:1.30-alpine";
-        autoStart = true;
-        ports = [ "127.0.0.1:28983:5173" ];
-        extraOptions = [ "--network=riptide-net" ];
-        volumes = [ "/mnt/data/riptide/nginx.conf:/etc/nginx/conf.d/default.conf:ro" ];
-      };
-    };
-
-    systemd.services.docker-network-riptide-net = {
-      description = "Create riptide-net docker network";
-      after = [ "docker.service" ];
-      wantedBy = [ "multi-user.target" ];
-      serviceConfig.Type = "oneshot";
-      script = ''
-        ${pkgs.docker}/bin/docker network inspect riptide-net >/dev/null 2>&1 || \
-        ${pkgs.docker}/bin/docker network create riptide-net
-      '';
-    };
-
     services = [
       { "Infrastructure" = [
         { Traefik = { href = "https://traefik.maelstrom.home"; description = "Reverse proxy";     icon = "traefik.png"; }; }
@@ -307,6 +249,64 @@
         { ConvertX    = { href = "https://convertx.maelstrom.home";    description = "File converter";   icon = "convertx.png";    }; }
       ]; }
     ];
+  };
+
+  virtualisation.oci-containers.containers = {
+    riptide-backend = {
+      image = "ghcr.io/lakaki27/riptide-backend:latest";
+      autoStart = true;
+      environmentFiles = [ config.age.secrets.riptideEnv.path ];
+      environment = {
+        DB_HOST = "host.docker.internal";
+        DB_PORT = "5432";
+        DB_USER = "riptide";
+        DB_NAME = "riptide";
+        S3_ENDPOINT = "http://riptide-rustfs:9000";
+        S3_PUBLIC_ENDPOINT = "https://music.maelstrom.home";
+        S3_REGION = "us-east-1";
+        S3_BUCKET = "media";
+        AUTH_ENABLED = "true";
+      };
+      extraOptions = [
+        "--network=riptide-net"
+        "--add-host=host.docker.internal:host-gateway"
+      ];
+    };
+
+    riptide-frontend = {
+      image = "ghcr.io/lakaki27/riptide-frontend:latest";
+      autoStart = true;
+      extraOptions = [ "--network=riptide-net" ];
+      environment.PUBLIC_API_BASE_URL = "https://music.maelstrom.home/api";
+    };
+
+    riptide-rustfs = {
+      image = "rustfs/rustfs:latest";
+      autoStart = true;
+      extraOptions = [ "--network=riptide-net" ];
+      volumes = [ "/mnt/data/riptide/rustfs:/data" ];
+      environmentFiles = [ config.age.secrets.riptideEnv.path ];
+      environment.RUSTFS_CONSOLE_ENABLE = "true";
+    };
+
+    riptide-nginx = {
+      image = "nginx:1.30-alpine";
+      autoStart = true;
+      ports = [ "127.0.0.1:28983:5173" ];
+      extraOptions = [ "--network=riptide-net" ];
+      volumes = [ "/mnt/data/riptide/nginx.conf:/etc/nginx/conf.d/default.conf:ro" ];
+    };
+  };
+
+  systemd.services.docker-network-riptide-net = {
+    description = "Create riptide-net docker network";
+    after = [ "docker.service" ];
+    wantedBy = [ "multi-user.target" ];
+    serviceConfig.Type = "oneshot";
+    script = ''
+      ${pkgs.docker}/bin/docker network inspect riptide-net >/dev/null 2>&1 || \
+      ${pkgs.docker}/bin/docker network create riptide-net
+    '';
   };
 
   systemd.services.homepage-dashboard.environment = {
