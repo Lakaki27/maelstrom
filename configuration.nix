@@ -268,6 +268,7 @@
       autoStart = true;
       environmentFiles = [ config.age.secrets.riptideEnv.path ];
       environment = {
+        NODE_ENV = "production";
         DB_HOST = "host.docker.internal";
         DB_PORT = "5432";
         DB_USER = "riptide";
