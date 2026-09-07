@@ -34,8 +34,8 @@
 
   age.identityPaths = [ "/etc/age/server.key" ];
 
-  # Temp blackcandy
   virtualisation.docker.enable = true;
+  virtualisation.oci-containers.backend = "docker";
 
   services.dnsmasq = {
     enable = true;
@@ -249,6 +249,17 @@
         { ConvertX    = { href = "https://convertx.maelstrom.home";    description = "File converter";   icon = "convertx.png";    }; }
       ]; }
     ];
+  };
+
+  systemd.services = {
+    docker-riptide-backend.after   = [ "docker-network-riptide-net.service" ];
+    docker-riptide-backend.requires = [ "docker-network-riptide-net.service" ];
+    docker-riptide-frontend.after   = [ "docker-network-riptide-net.service" ];
+    docker-riptide-frontend.requires = [ "docker-network-riptide-net.service" ];
+    docker-riptide-nginx.after   = [ "docker-network-riptide-net.service" ];
+    docker-riptide-nginx.requires = [ "docker-network-riptide-net.service" ];
+    docker-riptide-rustfs.after   = [ "docker-network-riptide-net.service" ];
+    docker-riptide-rustfs.requires = [ "docker-network-riptide-net.service" ];
   };
 
   virtualisation.oci-containers.containers = {
