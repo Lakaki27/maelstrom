@@ -267,8 +267,10 @@
       image = "ghcr.io/lakaki27/riptide-backend:latest";
       autoStart = true;
       environmentFiles = [ config.age.secrets.riptideEnv.path ];
+      volumes = [ "/mnt/data/riptide/consume:/consume" ];
       environment = {
         NODE_ENV = "production";
+        CONSUME_DIR = "/consume";
         DB_HOST = "host.docker.internal";
         DB_PORT = "5432";
         DB_USER = "riptide";
@@ -414,6 +416,7 @@
     "d /mnt/data/gokapi             0750 gokapi    gokapi    -"
     "d /mnt/data/riptide         0750 root root -"
     "d /mnt/data/riptide/rustfs  0750 root root -"
+    "d /mnt/data/riptide/consume 0750 root root -"
   ];
 
   users.users.wastebin = { isSystemUser = true; group = "wastebin"; };
