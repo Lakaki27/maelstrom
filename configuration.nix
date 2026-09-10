@@ -317,6 +317,8 @@
     after = [ "docker.service" ];
     wantedBy = [ "multi-user.target" ];
     serviceConfig.Type = "oneshot";
+    serviceConfig.RemainAfterExit = true;
+    unitConfig.StartLimitIntervalSec = 0;
     script = ''
       ${pkgs.docker}/bin/docker network inspect riptide-net >/dev/null 2>&1 || \
       ${pkgs.docker}/bin/docker network create riptide-net
