@@ -462,18 +462,6 @@
     ];
   };
 
-  security.sudo.extraRules = [
-    {
-      users = [ "maelstrom" ];
-      commands = [
-        {
-          command = "/nix/store/*/activate-rs";
-          options = [ "NOPASSWD" ];
-        }
-      ];
-    }
-  ];
-
   security.sudo.extraRules = [{
     users = [ "maelstrom" ];
     commands = [{
