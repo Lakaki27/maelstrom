@@ -256,10 +256,24 @@
     docker-riptide-backend.requires = [ "docker-network-riptide-net.service" ];
     docker-riptide-frontend.after   = [ "docker-network-riptide-net.service" ];
     docker-riptide-frontend.requires = [ "docker-network-riptide-net.service" ];
-    docker-riptide-nginx.after   = [ "docker-network-riptide-net.service" ];
-    docker-riptide-nginx.requires = [ "docker-network-riptide-net.service" ];
     docker-riptide-rustfs.after   = [ "docker-network-riptide-net.service" ];
     docker-riptide-rustfs.requires = [ "docker-network-riptide-net.service" ];
+    docker-riptide-nginx = {
+      after = [
+        "docker-network-riptide-net.service"
+        "docker-riptide-backend.service"
+        "docker-riptide-frontend.service"
+        "docker-riptide-rustfs.service"
+      ];
+
+      wants = [
+        "docker-riptide-backend.service"
+        "docker-riptide-frontend.service"
+        "docker-riptide-rustfs.service"
+      ];
+
+      requires = [ "docker-network-riptide-net.service" ];
+    };
   };
 
   virtualisation.oci-containers.containers = {
@@ -283,6 +297,7 @@
       };
       extraOptions = [
         "--network=riptide-net"
+        "--network-alias=backend"
         "--add-host=host.docker.internal:host-gateway"
       ];
     };
@@ -290,14 +305,20 @@
     riptide-frontend = {
       image = "ghcr.io/lakaki27/riptide-frontend:latest";
       autoStart = true;
-      extraOptions = [ "--network=riptide-net" ];
+      extraOptions = [
+        "--network=riptide-net"
+        "--network-alias=frontend"
+      ];
       environment.PUBLIC_API_BASE_URL = "https://music.maelstrom.home/api";
     };
 
     riptide-rustfs = {
       image = "rustfs/rustfs:latest";
       autoStart = true;
-      extraOptions = [ "--network=riptide-net" ];
+      extraOptions = [
+        "--network=riptide-net"
+        "--network-alias=rustfs"
+      ];
       volumes = [ "/mnt/data/riptide/rustfs:/data" ];
       environmentFiles = [ config.age.secrets.riptideEnv.path ];
       environment.RUSTFS_CONSOLE_ENABLE = "true";
@@ -307,7 +328,10 @@
       image = "nginx:1.30-alpine";
       autoStart = true;
       ports = [ "127.0.0.1:28983:5173" ];
-      extraOptions = [ "--network=riptide-net" ];
+      extraOptions = [
+        "--network=riptide-net"
+        "--network-alias=nginx"
+      ];
       volumes = [ "/mnt/data/riptide/nginx.conf:/etc/nginx/conf.d/default.conf:ro" ];
     };
   };
@@ -416,9 +440,9 @@
     "d /mnt/data/wastebin           0750 wastebin  wastebin  -"
     "d /mnt/data/convertx           0750 convertx  convertx  -"
     "d /mnt/data/gokapi             0750 gokapi    gokapi    -"
-    "d /mnt/data/riptide         0750 root root -"
-    "d /mnt/data/riptide/rustfs  0750 root root -"
-    "d /mnt/data/riptide/consume 0750 root root -"
+    "d /mnt/data/riptide            0750 root      root      -"
+    "d /mnt/data/riptide/rustfs     0777 root      root      -"
+    "d /mnt/data/riptide/consume    0750 root      root      -"
   ];
 
   users.users.wastebin = { isSystemUser = true; group = "wastebin"; };
@@ -431,19 +455,32 @@
 
   users.users.maelstrom = {
     isNormalUser = true;
-    extraGroups  = [ "wheel" ];
+    extraGroups = [ "wheel" ];
+
     openssh.authorizedKeys.keys = [
       "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIG/4M8fggqYWUdoG8DiWKLIhNWNmy7djUc9+FS/jI7LG leo@starborne"
     ];
   };
 
-  services.openssh = {
-    enable = true;
-    settings = {
-      PasswordAuthentication = false;
-      PermitRootLogin        = "no";
-    };
-  };
+  security.sudo.extraRules = [
+    {
+      users = [ "maelstrom" ];
+      commands = [
+        {
+          command = "/nix/store/*/activate-rs";
+          options = [ "NOPASSWD" ];
+        }
+      ];
+    }
+  ];
+
+  security.sudo.extraRules = [{
+    users = [ "maelstrom" ];
+    commands = [{
+      command = "/nix/store/*/activate-rs";
+      options = [ "NOPASSWD" ];
+    }];
+  }];
 
   environment.systemPackages = with pkgs; [
     git htop curl wget jq age smartmontools lsof nodejs

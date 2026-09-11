@@ -22,11 +22,16 @@
     deploy.nodes.maelstrom = {
       hostname = "maelstrom.home";
       sshUser = "maelstrom";
+
       profiles.system = {
         user = "root";
-        path = deploy-rs.lib.x86_64-linux.activate.nixos self.nixosConfigurations.maelstrom;
+        remoteBuild = true;
+        path = deploy-rs.lib.x86_64-linux.activate.nixos
+          self.nixosConfigurations.maelstrom;
       };
     };
+
+    apps.x86_64-linux.deploy-rs = deploy-rs.apps.x86_64-linux.deploy-rs;
 
     checks = builtins.mapAttrs
       (system: deployLib: deployLib.deployChecks self.deploy)
