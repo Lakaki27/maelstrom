@@ -470,6 +470,14 @@
     }];
   }];
 
+  services.openssh = {
+    enable = true;
+    settings = {
+      PasswordAuthentication = false;
+      PermitRootLogin        = "no";
+    };
+  };
+
   environment.systemPackages = with pkgs; [
     git htop curl wget jq age smartmontools lsof nodejs
   ];
