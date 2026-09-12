@@ -465,7 +465,7 @@
   security.sudo.extraRules = [{
     users = [ "maelstrom" ];
     commands = [{
-      command = "/nix/store/*/activate-rs";
+      command = "ALL";
       options = [ "NOPASSWD" ];
     }];
   }];
