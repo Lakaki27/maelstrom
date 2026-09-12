@@ -24,13 +24,14 @@
 
   age.secrets = {
     paperlessAdminPassword = { file = ./paperless-admin-password.age; owner = "paperless"; };
-    paperlessSecretKey     = { file = ./paperless-secret-key.age;     owner = "paperless"; };
+    paperlessSecretKey     = { file = ./paperless-secret-key.age;      owner = "paperless"; };
     vaultwardenAdminToken  = { file = ./vaultwarden-admin-token.age; };
     traefikTlsCert         = { file = ./traefik-tls-cert.age; owner = "traefik"; path = "/run/traefik/tls.crt"; };
     traefikTlsKey          = { file = ./traefik-tls-key.age;  owner = "traefik"; path = "/run/traefik/tls.key"; mode = "0400"; };
     convertxJwtSecret      = { file = ./convertx-jwt-secret.age; };
     giteaSecretKey         = { file = ./gitea-secret-key.age; owner = "gitea"; };
     riptideEnv             = { file = ./riptide-env.age; };
+    ankiPassword           = { file = ./anki-password.age; };
   };
 
   age.identityPaths = [ "/etc/age/server.key" ];
@@ -69,7 +70,7 @@
 
     ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" "vikunja" ];
     ensureUsers = [
-      { name = "paperless";   ensureDBOwnership = true; }
+      { name = "paperless";    ensureDBOwnership = true; }
       { name = "vaultwarden"; ensureDBOwnership = true; }
       { name = "gitea";       ensureDBOwnership = true; }
       { name = "riptide";     ensureDBOwnership = true; }
@@ -119,6 +120,7 @@
           convertx    = { rule = "Host(`convertx.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
           riptide     = { rule = "Host(`riptide.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "riptide"; };
           vikunja     = { rule = "Host(`vikunja.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "vikunja"; };
+          anki        = { rule = "Host(`anki.maelstrom.home`)";        entryPoints = ["websecure"]; tls = {}; service = "anki"; };
         };
 
         services = {
@@ -132,6 +134,7 @@
           convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000";  }];
           riptide.loadBalancer.servers      = [{ url = "http://127.0.0.1:28983"; }];
           vikunja.loadBalancer.servers      = [{ url = "http://127.0.0.1:3456"; }];
+          anki.loadBalancer.servers         = [{ url = "http://127.0.0.1:27701"; }];
         };
       };
     };
@@ -183,10 +186,10 @@
     stateDir = "/mnt/data/gitea";
 
     database = {
-      type           = "postgres";
-      socket         = "/run/postgresql";
-      name           = "gitea";
-      user           = "gitea";
+      type            = "postgres";
+      socket          = "/run/postgresql";
+      name            = "gitea";
+      user            = "gitea";
       createDatabase = false;
     };
 
@@ -224,6 +227,7 @@
         { name = "Homepage";    url = "https://home.maelstrom.home";        interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Riptide";     url = "https://riptide.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Vikunja";     url = "https://vikunja.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Anki Sync";   url = "https://anki.maelstrom.home";        interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
       ];
     };
   };
@@ -244,6 +248,18 @@
         publicurl = "https://vikunja.maelstrom.home/";
       };
     };
+  };
+
+  services.anki-sync-server = {
+    enable = true;
+    address = "127.0.0.1";
+    baseDirectory = "/mnt/data/anki";
+    users = [
+      {
+        username = "maelstrom";
+        passwordFile = config.age.secrets.ankiPassword.path;
+      }
+    ];
   };
 
   services.homepage-dashboard = {
@@ -267,7 +283,7 @@
     services = [
       { "Infrastructure" = [
         { Traefik = { href = "https://traefik.maelstrom.home"; description = "Reverse proxy";     icon = "traefik.png"; }; }
-        { Gatus   = { href = "https://gatus.maelstrom.home";   description = "Uptime monitoring"; icon = "gatus.png";   }; }
+        { Gatus   = { href = "https://gatus.maelstrom.home";    description = "Uptime monitoring"; icon = "gatus.png";   }; }
       ]; }
       { "Funi hehe" = [
         { Riptide = { href = "https://riptide.maelstrom.home"; description = "Music player";  icon = "traefik.png"; }; }
@@ -276,6 +292,7 @@
         { Paperless = { href = "https://paperless.maelstrom.home"; description = "Document manager";  icon = "paperless-ngx.png"; }; }
         { Gokapi    = { href = "https://gokapi.maelstrom.home/admin";    description = "File sharing";      icon = "traefik.png"; }; }
         { Vikunja   = { href = "https://vikunja.maelstrom.home"; description = "Task & Kanban manager"; icon = "vikunja.png"; }; }
+        { Anki        = { href = "https://anki.maelstrom.home";        description = "Sync server";       icon = "anki.png";        }; }
       ]; }
       { "Dev" = [
         { Gitea    = { href = "https://gitea.maelstrom.home";    description = "Git forge"; icon = "gitea.png";    }; }
@@ -283,7 +300,7 @@
       ]; }
       { "Tools" = [
         { Vaultwarden = { href = "https://vaultwarden.maelstrom.home"; description = "Password manager"; icon = "vaultwarden.png"; }; }
-        { ConvertX    = { href = "https://convertx.maelstrom.home";    description = "File converter";   icon = "convertx.png";    }; }
+        { ConvertX    = { href = "https://convertx.maelstrom.home";    description = "File converter";    icon = "convertx.png";    }; }
       ]; }
     ];
   };
@@ -304,7 +321,7 @@
     docker-riptide-rustfs = {
       after    = [ "docker-network-riptide-net.service" ];
       requires = [ "docker-network-riptide-net.service" ];
-      preStart = "${pkgs.docker}/bin/docker pull rustfs/rustfs:latest"; # Replace with your actual RustFS image tag if different
+      preStart = "${pkgs.docker}/bin/docker pull rustfs/rustfs:latest";
     };
 
     docker-riptide-nginx = {
@@ -320,7 +337,7 @@
         "docker-riptide-rustfs.service"
       ];
       requires = [ "docker-network-riptide-net.service" ];
-      preStart = "${pkgs.docker}/bin/docker pull nginx:alpine"; # Replace with your actual Nginx image tag if different
+      preStart = "${pkgs.docker}/bin/docker pull nginx:alpine";
     };
   };
 
@@ -406,7 +423,7 @@
     script = ''
       ${pkgs.docker}/bin/docker network inspect riptide-net >/dev/null 2>&1 || \
       ${pkgs.docker}/bin/docker network create riptide-net
-    '';
+      '';
   };
 
   systemd.services.homepage-dashboard.environment = {
@@ -426,10 +443,10 @@
     };
 
     serviceConfig = {
-      Type           = "simple";
-      ExecStart      = "${pkgs.wastebin}/bin/wastebin";
-      User           = "wastebin";
-      Group          = "wastebin";
+      Type            = "simple";
+      ExecStart       = "${pkgs.wastebin}/bin/wastebin";
+      User            = "wastebin";
+      Group           = "wastebin";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
@@ -451,12 +468,12 @@
     };
 
     serviceConfig = {
-      Type             = "simple";
-      ExecStart        = "${pkgs.convertx}/bin/convertx";
-      EnvironmentFile  = config.age.secrets.convertxJwtSecret.path;
-      User             = "convertx";
-      Group            = "convertx";
-      WorkingDirectory = "/mnt/data/convertx";
+      Type                 = "simple";
+      ExecStart            = "${pkgs.convertx}/bin/convertx";
+      EnvironmentFile      = config.age.secrets.convertxJwtSecret.path;
+      User                 = "convertx";
+      Group                = "convertx";
+      WorkingDirectory     = "/mnt/data/convertx";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
@@ -477,10 +494,10 @@
     };
 
     serviceConfig = {
-      Type           = "simple";
-      ExecStart      = "${pkgs.gokapi}/bin/gokapi";
-      User           = "gokapi";
-      Group          = "gokapi";
+      Type            = "simple";
+      ExecStart       = "${pkgs.gokapi}/bin/gokapi";
+      User            = "gokapi";
+      Group           = "gokapi";
 
       NoNewPrivileges = true;
       ProtectSystem   = "strict";
@@ -492,7 +509,7 @@
   };
 
   systemd.tmpfiles.rules = [
-    "d /mnt/data                    0755 root      root      -"
+    "d /mnt/data                      0755 root      root      -"
     "d /mnt/data/paperless          0750 paperless paperless -"
     "d /mnt/data/paperless/media    0750 paperless paperless -"
     "d /mnt/data/paperless/consume  0750 paperless paperless -"
@@ -501,8 +518,9 @@
     "d /mnt/data/convertx           0750 convertx  convertx  -"
     "d /mnt/data/gokapi             0750 gokapi    gokapi    -"
     "d /mnt/data/riptide            0750 root      root      -"
-    "d /mnt/data/riptide/rustfs     0777 root      root      -"
+    "d /mnt/data/riptide/rustfs      0777 root      root      -"
     "d /mnt/data/riptide/consume    0750 root      root      -"
+    "d /mnt/data/anki               0750 anki-sync-server anki-sync-server -"
   ];
 
   users.users.wastebin = { isSystemUser = true; group = "wastebin"; };

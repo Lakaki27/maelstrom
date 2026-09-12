@@ -4,13 +4,14 @@ let
   all    = [ server host ];
 in
 {
-  "convertx-jwt-secret.age".publicKeys      = all;
-  "gitea-secret-key.age".publicKeys         = all;
+  "convertx-jwt-secret.age".publicKeys     = all;
+  "gitea-secret-key.age".publicKeys        = all;
   "paperless-admin-password.age".publicKeys = all;
   "paperless-secret-key.age".publicKeys     = all;
-  "traefik-tls-cert.age".publicKeys         = all;
-  "traefik-tls-key.age".publicKeys          = all;
+  "traefik-tls-cert.age".publicKeys        = all;
+  "traefik-tls-key.age".publicKeys         = all;
   "vaultwarden-admin-token.age".publicKeys  = all;
   "riptide-env.age".publicKeys              = all;
   "vikunja-jwt-secret.age".publicKeys       = all;
+  "anki-password.age".publicKeys           = all;
 }
