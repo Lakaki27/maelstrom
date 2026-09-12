@@ -12,4 +12,5 @@ in
   "traefik-tls-key.age".publicKeys          = all;
   "vaultwarden-admin-token.age".publicKeys  = all;
   "riptide-env.age".publicKeys              = all;
+  "vikunja-jwt-secret.age".publicKeys       = all;
 }

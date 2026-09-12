@@ -13,9 +13,10 @@
   networking.networkmanager.enable = true;
 
   networking.firewall = {
-    enable          = true;
+    enable = true;
     allowedUDPPorts = [ 53 ];
-    allowedTCPPorts = [ 80 443 53 ];
+    allowedTCPPorts = [ 80 443 53 5432 ]; # Open 5432 for container bridge access
+    trustedInterfaces = [ "docker0" "riptide-net" ];
   };
 
   time.timeZone      = "Europe/Paris";
@@ -42,17 +43,31 @@
     settings = {
       address         = "/.maelstrom.home/192.168.69.20";
       listen-address  = [ "127.0.0.1" "192.168.69.20" ];
-      bind-interfaces = true;
+      bind-dynamic    = true;
       no-resolv       = false;
     };
+  };
+
+  systemd.services.dnsmasq = {
+    after = [ "network-online.target" "NetworkManager-wait-online.service" ];
+    wants = [ "network-online.target" ];
   };
 
   services.postgresql = {
     enable  = true;
     package = pkgs.postgresql_17;
 
-    ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" "vikunja" ];
+    settings.listen_addresses = lib.mkForce "*";
 
+    authentication = lib.mkForce ''
+      # TYPE  DATABASE        USER            ADDRESS                 METHOD
+      local   all             all                                     trust
+      host    all             all             127.0.0.1/32            trust
+      host    all             all             ::1/128                 trust
+      host    all             all             172.16.0.0/12           trust
+    '';
+
+    ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" "vikunja" ];
     ensureUsers = [
       { name = "paperless";   ensureDBOwnership = true; }
       { name = "vaultwarden"; ensureDBOwnership = true; }
@@ -60,8 +75,6 @@
       { name = "riptide";     ensureDBOwnership = true; }
       { name = "vikunja";     ensureDBOwnership = true; }
     ];
-
-    settings.listen_addresses = "localhost";
   };
 
   services.redis.servers.maelstrom = {
@@ -218,6 +231,8 @@
   services.vikunja = {
     enable = true;
     port = 3456;
+    frontendScheme = "https";
+    frontendHostname = "vikunja.maelstrom.home";
     database = {
       type = "postgres";
       host = "/run/postgresql";
@@ -274,12 +289,21 @@
   };
 
   systemd.services = {
-    docker-riptide-backend.after   = [ "docker-network-riptide-net.service" ];
-    docker-riptide-backend.requires = [ "docker-network-riptide-net.service" ];
-    docker-riptide-frontend.after   = [ "docker-network-riptide-net.service" ];
-    docker-riptide-frontend.requires = [ "docker-network-riptide-net.service" ];
-    docker-riptide-rustfs.after   = [ "docker-network-riptide-net.service" ];
-    docker-riptide-rustfs.requires = [ "docker-network-riptide-net.service" ];
+    docker-riptide-backend = {
+      after    = [ "docker-network-riptide-net.service" "postgresql.service" ];
+      requires = [ "docker-network-riptide-net.service" "postgresql.service" ];
+    };
+
+    docker-riptide-frontend = {
+      after    = [ "docker-network-riptide-net.service" ];
+      requires = [ "docker-network-riptide-net.service" ];
+    };
+
+    docker-riptide-rustfs = {
+      after    = [ "docker-network-riptide-net.service" ];
+      requires = [ "docker-network-riptide-net.service" ];
+    };
+
     docker-riptide-nginx = {
       after = [
         "docker-network-riptide-net.service"
@@ -287,13 +311,11 @@
         "docker-riptide-frontend.service"
         "docker-riptide-rustfs.service"
       ];
-
       wants = [
         "docker-riptide-backend.service"
         "docker-riptide-frontend.service"
         "docker-riptide-rustfs.service"
       ];
-
       requires = [ "docker-network-riptide-net.service" ];
     };
   };
@@ -307,8 +329,9 @@
       environment = {
         NODE_ENV = "production";
         CONSUME_DIR = "/consume";
-        DB_HOST = "host.docker.internal";
+        DB_HOST = "172.19.0.1";
         DB_PORT = "5432";
+        PORT = "3000";
         DB_USER = "riptide";
         DB_NAME = "riptide";
         S3_ENDPOINT = "http://riptide-rustfs:9000";
@@ -316,11 +339,13 @@
         S3_REGION = "us-east-1";
         S3_BUCKET = "media";
         AUTH_ENABLED = "true";
+        PASSWORD_MIN_LENGTH = "8";
       };
       extraOptions = [
         "--network=riptide-net"
         "--network-alias=backend"
         "--add-host=host.docker.internal:host-gateway"
+        "--pull=always"
       ];
     };
 
@@ -330,8 +355,15 @@
       extraOptions = [
         "--network=riptide-net"
         "--network-alias=frontend"
+        "--pull=always"
       ];
-      environment.PUBLIC_API_BASE_URL = "https://riptide.maelstrom.home/api";
+      environment = {
+        PORT = "5173";
+        HOST = "0.0.0.0";
+        ORIGIN = "https://riptide.maelstrom.home";
+        BODY_SIZE_LIMIT = "Infinity";
+        PUBLIC_API_BASE_URL = "https://riptide.maelstrom.home/api";
+      };
     };
 
     riptide-rustfs = {
@@ -340,6 +372,7 @@
       extraOptions = [
         "--network=riptide-net"
         "--network-alias=rustfs"
+        "--pull=always"
       ];
       volumes = [ "/mnt/data/riptide/rustfs:/data" ];
       environmentFiles = [ config.age.secrets.riptideEnv.path ];
@@ -353,6 +386,7 @@
       extraOptions = [
         "--network=riptide-net"
         "--network-alias=nginx"
+        "--pull=always"
       ];
       volumes = [ "/mnt/data/riptide/nginx.conf:/etc/nginx/conf.d/default.conf:ro" ];
     };
