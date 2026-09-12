@@ -292,16 +292,19 @@
     docker-riptide-backend = {
       after    = [ "docker-network-riptide-net.service" "postgresql.service" ];
       requires = [ "docker-network-riptide-net.service" "postgresql.service" ];
+      preStart = "${pkgs.docker}/bin/docker pull ghcr.io/lakaki27/riptide-backend:latest";
     };
 
     docker-riptide-frontend = {
       after    = [ "docker-network-riptide-net.service" ];
       requires = [ "docker-network-riptide-net.service" ];
+      preStart = "${pkgs.docker}/bin/docker pull ghcr.io/lakaki27/riptide-frontend:latest";
     };
 
     docker-riptide-rustfs = {
       after    = [ "docker-network-riptide-net.service" ];
       requires = [ "docker-network-riptide-net.service" ];
+      preStart = "${pkgs.docker}/bin/docker pull rustfs/rustfs:latest"; # Replace with your actual RustFS image tag if different
     };
 
     docker-riptide-nginx = {
@@ -317,6 +320,7 @@
         "docker-riptide-rustfs.service"
       ];
       requires = [ "docker-network-riptide-net.service" ];
+      preStart = "${pkgs.docker}/bin/docker pull nginx:alpine"; # Replace with your actual Nginx image tag if different
     };
   };
 
