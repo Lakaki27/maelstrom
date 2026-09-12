@@ -51,13 +51,14 @@
     enable  = true;
     package = pkgs.postgresql_17;
 
-    ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" ];
+    ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" "vikunja" ];
 
     ensureUsers = [
       { name = "paperless";   ensureDBOwnership = true; }
       { name = "vaultwarden"; ensureDBOwnership = true; }
       { name = "gitea";       ensureDBOwnership = true; }
       { name = "riptide";     ensureDBOwnership = true; }
+      { name = "vikunja";     ensureDBOwnership = true; }
     ];
 
     settings.listen_addresses = "localhost";
@@ -103,8 +104,8 @@
           wastebin    = { rule = "Host(`wastebin.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "wastebin"; };
           gokapi      = { rule = "Host(`gokapi.maelstrom.home`)";      entryPoints = ["websecure"]; tls = {}; service = "gokapi"; };
           convertx    = { rule = "Host(`convertx.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
-          riptide     = { rule = "Host(`music.maelstrom.home`)";       entryPoints = ["websecure"]; tls = {}; service = "riptide"; };
-
+          riptide     = { rule = "Host(`riptide.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "riptide"; };
+          vikunja     = { rule = "Host(`vikunja.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "vikunja"; };
         };
 
         services = {
@@ -117,6 +118,7 @@
           gokapi.loadBalancer.servers       = [{ url = "http://127.0.0.1:8080";  }];
           convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000";  }];
           riptide.loadBalancer.servers      = [{ url = "http://127.0.0.1:28983"; }];
+          vikunja.loadBalancer.servers      = [{ url = "http://127.0.0.1:3456"; }];
         };
       };
     };
@@ -145,9 +147,6 @@
       PAPERLESS_REDIS      = "redis://127.0.0.1:6379";
     };
   };
-
-  # systemd.services.paperless-web.serviceConfig.EnvironmentFile =
-  #   config.age.secrets.paperlessSecretKey.path;
 
   services.vaultwarden = {
     enable = true;
@@ -210,7 +209,25 @@
         { name = "Gokapi";      url = "https://gokapi.maelstrom.home";      interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "ConvertX";    url = "https://convertx.maelstrom.home";    interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Homepage";    url = "https://home.maelstrom.home";        interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Riptide";     url = "https://riptide.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Vikunja";     url = "https://vikunja.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
       ];
+    };
+  };
+
+  services.vikunja = {
+    enable = true;
+    port = 3456;
+    database = {
+      type = "postgres";
+      host = "/run/postgresql";
+      user = "vikunja";
+      database = "vikunja";
+    };
+    settings = {
+      service = {
+        publicurl = "https://vikunja.maelstrom.home/";
+      };
     };
   };
 
@@ -225,6 +242,7 @@
       headerStyle = "clean";
       layout = {
         "Infrastructure" = { style = "row"; columns = 3; };
+        "Funi hehe"      = { style = "row"; columns = 3; };
         "Files & Docs"   = { style = "row"; columns = 3; };
         "Dev"            = { style = "row"; columns = 3; };
         "Tools"          = { style = "row"; columns = 3; };
@@ -236,13 +254,17 @@
         { Traefik = { href = "https://traefik.maelstrom.home"; description = "Reverse proxy";     icon = "traefik.png"; }; }
         { Gatus   = { href = "https://gatus.maelstrom.home";   description = "Uptime monitoring"; icon = "gatus.png";   }; }
       ]; }
+      { "Funi hehe" = [
+        { Riptide = { href = "https://riptide.maelstrom.home"; description = "Music player";  icon = "traefik.png"; }; }
+      ]; }
       { "Files & Docs" = [
         { Paperless = { href = "https://paperless.maelstrom.home"; description = "Document manager";  icon = "paperless-ngx.png"; }; }
-        { Gokapi    = { href = "https://gokapi.maelstrom.home/admin";    description = "File sharing";      icon = "gokapi.png";        }; }
+        { Gokapi    = { href = "https://gokapi.maelstrom.home/admin";    description = "File sharing";      icon = "traefik.png"; }; }
+        { Vikunja   = { href = "https://vikunja.maelstrom.home"; description = "Task & Kanban manager"; icon = "vikunja.png"; }; }
       ]; }
       { "Dev" = [
         { Gitea    = { href = "https://gitea.maelstrom.home";    description = "Git forge"; icon = "gitea.png";    }; }
-        { Wastebin = { href = "https://wastebin.maelstrom.home"; description = "Pastebin";  icon = "wastebin.png"; }; }
+        { Wastebin = { href = "https://wastebin.maelstrom.home"; description = "Pastebin";  icon = "traefik.png"; }; }
       ]; }
       { "Tools" = [
         { Vaultwarden = { href = "https://vaultwarden.maelstrom.home"; description = "Password manager"; icon = "vaultwarden.png"; }; }
@@ -290,7 +312,7 @@
         DB_USER = "riptide";
         DB_NAME = "riptide";
         S3_ENDPOINT = "http://riptide-rustfs:9000";
-        S3_PUBLIC_ENDPOINT = "https://music.maelstrom.home";
+        S3_PUBLIC_ENDPOINT = "https://riptide.maelstrom.home";
         S3_REGION = "us-east-1";
         S3_BUCKET = "media";
         AUTH_ENABLED = "true";
@@ -309,7 +331,7 @@
         "--network=riptide-net"
         "--network-alias=frontend"
       ];
-      environment.PUBLIC_API_BASE_URL = "https://music.maelstrom.home/api";
+      environment.PUBLIC_API_BASE_URL = "https://riptide.maelstrom.home/api";
     };
 
     riptide-rustfs = {
