@@ -31,7 +31,7 @@
     convertxJwtSecret      = { file = ./convertx-jwt-secret.age; };
     giteaSecretKey         = { file = ./gitea-secret-key.age; owner = "gitea"; };
     riptideEnv             = { file = ./riptide-env.age; };
-    ankiPassword           = { file = ./anki-password.age; };
+    flashcardsEnv          = { file = ./flashcards-env.age; };
   };
 
   age.identityPaths = [ "/etc/age/server.key" ];
@@ -68,13 +68,14 @@
       host    all             all             172.16.0.0/12           trust
     '';
 
-    ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" "vikunja" ];
+    ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" "vikunja" "flashcards" ];
     ensureUsers = [
       { name = "paperless";    ensureDBOwnership = true; }
       { name = "vaultwarden"; ensureDBOwnership = true; }
       { name = "gitea";       ensureDBOwnership = true; }
       { name = "riptide";     ensureDBOwnership = true; }
       { name = "vikunja";     ensureDBOwnership = true; }
+      { name = "flashcards";  ensureDBOwnership = true; }
     ];
   };
 
@@ -120,7 +121,7 @@
           convertx    = { rule = "Host(`convertx.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
           riptide     = { rule = "Host(`riptide.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "riptide"; };
           vikunja     = { rule = "Host(`vikunja.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "vikunja"; };
-          anki        = { rule = "Host(`anki.maelstrom.home`)";        entryPoints = ["websecure"]; tls = {}; service = "anki"; };
+          flashcards  = { rule = "Host(`flashcards.maelstrom.home`)";  entryPoints = ["websecure"]; tls = {}; service = "flashcards"; };
         };
 
         services = {
@@ -133,8 +134,8 @@
           gokapi.loadBalancer.servers       = [{ url = "http://127.0.0.1:8080";  }];
           convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000";  }];
           riptide.loadBalancer.servers      = [{ url = "http://127.0.0.1:28983"; }];
-          vikunja.loadBalancer.servers      = [{ url = "http://127.0.0.1:3456"; }];
-          anki.loadBalancer.servers         = [{ url = "http://127.0.0.1:27701"; }];
+          vikunja.loadBalancer.servers      = [{ url = "http://127.0.0.1:3456";  }];
+          flashcards.loadBalancer.servers   = [{ url = "http://127.0.0.1:8088";  }];
         };
       };
     };
@@ -227,7 +228,7 @@
         { name = "Homepage";    url = "https://home.maelstrom.home";        interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Riptide";     url = "https://riptide.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Vikunja";     url = "https://vikunja.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
-        { name = "Anki Sync";   url = "https://anki.maelstrom.home";        interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Flashcards";  url = "https://flashcards.maelstrom.home";  interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
       ];
     };
   };
@@ -248,18 +249,6 @@
         publicurl = "https://vikunja.maelstrom.home/";
       };
     };
-  };
-
-  services.anki-sync-server = {
-    enable = true;
-    address = "127.0.0.1";
-    baseDirectory = "/mnt/data/anki";
-    users = [
-      {
-        username = "maelstrom";
-        passwordFile = config.age.secrets.ankiPassword.path;
-      }
-    ];
   };
 
   services.homepage-dashboard = {
@@ -292,7 +281,7 @@
         { Paperless = { href = "https://paperless.maelstrom.home"; description = "Document manager";  icon = "paperless-ngx.png"; }; }
         { Gokapi    = { href = "https://gokapi.maelstrom.home/admin";    description = "File sharing";      icon = "traefik.png"; }; }
         { Vikunja   = { href = "https://vikunja.maelstrom.home"; description = "Task & Kanban manager"; icon = "vikunja.png"; }; }
-        { Anki        = { href = "https://anki.maelstrom.home";        description = "Sync server";       icon = "anki.png";        }; }
+        { Flashcards = { href = "https://flashcards.maelstrom.home"; description = "SRS Flashcards"; icon = "anki.png"; }; }
       ]; }
       { "Dev" = [
         { Gitea    = { href = "https://gitea.maelstrom.home";    description = "Git forge"; icon = "gitea.png";    }; }
@@ -342,6 +331,22 @@
   };
 
   virtualisation.oci-containers.containers = {
+    flashcards = {
+      image = "ghcr.io/kmarkin/flashcards-open-source-app:latest";
+      autoStart = true;
+      ports = [ "127.0.0.1:8088:3000" ];
+      environmentFiles = [ config.age.secrets.flashcardsEnv.path ];
+      environment = {
+          NODE_ENV = "production";
+          DATABASE_URL = "postgresql://flashcards@host.docker.internal:5432/flashcards";
+          PORT = "3000";
+      };
+      extraOptions = [
+          "--add-host=host.docker.internal:host-gateway"
+          "--pull=always"
+      ];
+    };
+
     riptide-backend = {
       image = "ghcr.io/lakaki27/riptide-backend:latest";
       autoStart = true;
@@ -421,9 +426,9 @@
     serviceConfig.RemainAfterExit = true;
     unitConfig.StartLimitIntervalSec = 0;
     script = ''
-      ${pkgs.docker}/bin/docker network inspect riptide-net >/dev/null 2>&1 || \
-      ${pkgs.docker}/bin/docker network create riptide-net
-      '';
+        ${pkgs.docker}/bin/docker network inspect riptide-net >/dev/null 2>&1 || \
+        ${pkgs.docker}/bin/docker network create riptide-net || true
+    '';
   };
 
   systemd.services.homepage-dashboard.environment = {
@@ -520,7 +525,6 @@
     "d /mnt/data/riptide            0750 root      root      -"
     "d /mnt/data/riptide/rustfs      0777 root      root      -"
     "d /mnt/data/riptide/consume    0750 root      root      -"
-    "d /mnt/data/anki               0750 anki-sync-server anki-sync-server -"
   ];
 
   users.users.wastebin = { isSystemUser = true; group = "wastebin"; };
