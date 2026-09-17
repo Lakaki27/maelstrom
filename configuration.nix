@@ -31,7 +31,6 @@
     convertxJwtSecret      = { file = ./convertx-jwt-secret.age; };
     giteaSecretKey         = { file = ./gitea-secret-key.age; owner = "gitea"; };
     riptideEnv             = { file = ./riptide-env.age; };
-    flashcardsEnv          = { file = ./flashcards-env.age; };
   };
 
   age.identityPaths = [ "/etc/age/server.key" ];
@@ -68,14 +67,13 @@
       host    all             all             172.16.0.0/12           trust
     '';
 
-    ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" "vikunja" "flashcards" ];
+    ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" "vikunja" ];
     ensureUsers = [
       { name = "paperless";    ensureDBOwnership = true; }
       { name = "vaultwarden"; ensureDBOwnership = true; }
       { name = "gitea";       ensureDBOwnership = true; }
       { name = "riptide";     ensureDBOwnership = true; }
       { name = "vikunja";     ensureDBOwnership = true; }
-      { name = "flashcards";  ensureDBOwnership = true; }
     ];
   };
 
@@ -121,7 +119,6 @@
           convertx    = { rule = "Host(`convertx.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
           riptide     = { rule = "Host(`riptide.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "riptide"; };
           vikunja     = { rule = "Host(`vikunja.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "vikunja"; };
-          flashcards  = { rule = "Host(`flashcards.maelstrom.home`)";  entryPoints = ["websecure"]; tls = {}; service = "flashcards"; };
         };
 
         services = {
@@ -135,7 +132,6 @@
           convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000";  }];
           riptide.loadBalancer.servers      = [{ url = "http://127.0.0.1:28983"; }];
           vikunja.loadBalancer.servers      = [{ url = "http://127.0.0.1:3456";  }];
-          flashcards.loadBalancer.servers   = [{ url = "http://127.0.0.1:8088";  }];
         };
       };
     };
@@ -228,7 +224,6 @@
         { name = "Homepage";    url = "https://home.maelstrom.home";        interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Riptide";     url = "https://riptide.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Vikunja";     url = "https://vikunja.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
-        { name = "Flashcards";  url = "https://flashcards.maelstrom.home";  interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
       ];
     };
   };
@@ -281,7 +276,6 @@
         { Paperless = { href = "https://paperless.maelstrom.home"; description = "Document manager";  icon = "paperless-ngx.png"; }; }
         { Gokapi    = { href = "https://gokapi.maelstrom.home/admin";    description = "File sharing";      icon = "traefik.png"; }; }
         { Vikunja   = { href = "https://vikunja.maelstrom.home"; description = "Task & Kanban manager"; icon = "vikunja.png"; }; }
-        { Flashcards = { href = "https://flashcards.maelstrom.home"; description = "SRS Flashcards"; icon = "anki.png"; }; }
       ]; }
       { "Dev" = [
         { Gitea    = { href = "https://gitea.maelstrom.home";    description = "Git forge"; icon = "gitea.png";    }; }
@@ -331,22 +325,6 @@
   };
 
   virtualisation.oci-containers.containers = {
-    flashcards = {
-      image = "ghcr.io/kmarkin/flashcards-open-source-app:latest";
-      autoStart = true;
-      ports = [ "127.0.0.1:8088:3000" ];
-      environmentFiles = [ config.age.secrets.flashcardsEnv.path ];
-      environment = {
-          NODE_ENV = "production";
-          DATABASE_URL = "postgresql://flashcards@host.docker.internal:5432/flashcards";
-          PORT = "3000";
-      };
-      extraOptions = [
-          "--add-host=host.docker.internal:host-gateway"
-          "--pull=always"
-      ];
-    };
-
     riptide-backend = {
       image = "ghcr.io/lakaki27/riptide-backend:latest";
       autoStart = true;

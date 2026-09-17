@@ -13,5 +13,4 @@ in
   "vaultwarden-admin-token.age".publicKeys  = all;
   "riptide-env.age".publicKeys              = all;
   "vikunja-jwt-secret.age".publicKeys       = all;
-  "flashcards-env.age".publicKeys           = all;
 }
