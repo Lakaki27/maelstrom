@@ -119,6 +119,7 @@
           convertx    = { rule = "Host(`convertx.maelstrom.home`)";    entryPoints = ["websecure"]; tls = {}; service = "convertx"; };
           riptide     = { rule = "Host(`riptide.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "riptide"; };
           vikunja     = { rule = "Host(`vikunja.maelstrom.home`)";     entryPoints = ["websecure"]; tls = {}; service = "vikunja"; };
+          ollama      = { rule = "Host(`ollama.maelstrom.home`)";      entryPoints = ["websecure"]; tls = {}; service = "ollama"; };
         };
 
         services = {
@@ -132,6 +133,7 @@
           convertx.loadBalancer.servers     = [{ url = "http://127.0.0.1:3000";  }];
           riptide.loadBalancer.servers      = [{ url = "http://127.0.0.1:28983"; }];
           vikunja.loadBalancer.servers      = [{ url = "http://127.0.0.1:3456";  }];
+          ollama.loadBalancer.servers       = [{ url = "http://127.0.0.1:11434"; }];
         };
       };
     };
@@ -224,6 +226,7 @@
         { name = "Homepage";    url = "https://home.maelstrom.home";        interval = "5m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Riptide";     url = "https://riptide.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
         { name = "Vikunja";     url = "https://vikunja.maelstrom.home";     interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
+        { name = "Ollama";  url = "https://ollama.maelstrom.home/api/tags"; interval = "2m"; conditions = [ "[STATUS] < 400" ]; }
       ];
     };
   };
@@ -284,8 +287,17 @@
       { "Tools" = [
         { Vaultwarden = { href = "https://vaultwarden.maelstrom.home"; description = "Password manager"; icon = "vaultwarden.png"; }; }
         { ConvertX    = { href = "https://convertx.maelstrom.home";    description = "File converter";    icon = "convertx.png";    }; }
+        { Ollama = { href = "https://ollama.maelstrom.home"; description = "LLM Inference Engine"; icon = "ollama.png"; }; }
       ]; }
     ];
+  };
+
+  services.ollama = {
+    enable = true;
+    host = "127.0.0.1";
+    port = 11434;
+    keepAlive = "24h"; # Keeps model in RAM so responses start instantly
+    loadModels = [ "hermes3:8b" ];
   };
 
   systemd.services = {
