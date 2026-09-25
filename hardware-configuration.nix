@@ -14,8 +14,8 @@
     enable = true;
     extraPackages = with pkgs; [
       intel-media-driver   # VA-API Video Acceleration
-      intel-compute-runtime # OpenCL/SYCL driver for Intel iGPU (Neo)
-      vulkan-loader        # Vulkan API driver loader
+      intel-compute-runtime # OpenCL/Compute driver for Intel iGPU
+      vulkan-loader        # Vulkan runtime loader
     ];
   };
 
