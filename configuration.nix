@@ -294,7 +294,7 @@
 
   services.ollama = {
     enable = true;
-    host = "127.0.0.1";
+    host = "0.0.0.0";
     port = 11434;
     loadModels = [ "hermes3:8b" ];
 
