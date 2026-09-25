@@ -293,19 +293,24 @@
   };
 
   services.ollama = {
-    enable = true;
-    host = "0.0.0.0";
-    port = 11434;
-    loadModels = [ "hermes3:8b" ];
+      enable = true;
+      host = "0.0.0.0";
+      port = 11434;
+      package = pkgs.ollama-vulkan; # Use Vulkan build
 
-    # Set the Vulkan-accelerated build directly
-    package = pkgs.ollama-vulkan;
+      environmentVariables = {
+        OLLAMA_KEEP_ALIVE = "24h";
+        OLLAMA_ORIGINS = "*";
 
-    environmentVariables = {
-      OLLAMA_KEEP_ALIVE = "24h"; # Keep model loaded in RAM/VRAM for 24 hours
-      OLLAMA_ORIGINS = "*";     # Allow all cross-origin requests
+        # FORCE OLLAMA TO USE INTEGRATED GPU
+        OLLAMA_IGPU_ENABLE = "1";
+      };
     };
-  };
+
+    # Grant the ollama service user access to GPU render nodes
+    users.users.ollama = {
+      extraGroups = [ "render" "video" ];
+    };
 
   systemd.services = {
     docker-riptide-backend = {
