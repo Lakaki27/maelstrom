@@ -296,8 +296,12 @@
     enable = true;
     host = "127.0.0.1";
     port = 11434;
-    keepAlive = "24h"; # Keeps model in RAM so responses start instantly
     loadModels = [ "hermes3:8b" ];
+
+    environmentVariables = {
+      OLLAMA_KEEP_ALIVE = "24h"; # Keep model loaded in RAM for 24 hours
+      OLLAMA_ORIGINS = "*"; # Allow all cross-origin requests
+    };
   };
 
   systemd.services = {
