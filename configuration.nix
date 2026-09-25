@@ -307,10 +307,8 @@
       };
     };
 
-    # Grant the ollama service user access to GPU render nodes
-    users.users.ollama = {
-      extraGroups = [ "render" "video" ];
-    };
+    # Grant existing ollama user access to render/video nodes
+    users.users.ollama.extraGroups = [ "render" "video" ];
 
   systemd.services = {
     docker-riptide-backend = {
