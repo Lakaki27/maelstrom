@@ -558,7 +558,7 @@
   };
 
   environment.systemPackages = with pkgs; [
-    git htop curl wget jq age smartmontools lsof nodejs
+    git htop curl wget jq age smartmontools lsof nodejs intel-gpu-tools
   ];
 
   system.autoUpgrade = {
