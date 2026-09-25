@@ -293,22 +293,19 @@
   };
 
   services.ollama = {
-      enable = true;
-      host = "0.0.0.0";
-      port = 11434;
-      package = pkgs.ollama-vulkan; # Use Vulkan build
+    enable = true;
+    host = "0.0.0.0";
+    port = 11434;
+    package = pkgs.ollama-vulkan;
 
-      environmentVariables = {
-        OLLAMA_KEEP_ALIVE = "24h";
-        OLLAMA_ORIGINS = "*";
-
-        # FORCE OLLAMA TO USE INTEGRATED GPU
-        OLLAMA_IGPU_ENABLE = "1";
-      };
+    environmentVariables = {
+      OLLAMA_KEEP_ALIVE = "24h";
+      OLLAMA_ORIGINS = "*";
+      OLLAMA_IGPU_ENABLE = "1";
     };
+  };
 
-    # Grant existing ollama user access to render/video nodes
-    users.users.ollama.extraGroups = [ "render" "video" ];
+  users.users.ollama.extraGroups = [ "render" "video" ];
 
   systemd.services = {
     docker-riptide-backend = {
