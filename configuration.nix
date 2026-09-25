@@ -69,7 +69,7 @@
 
     ensureDatabases = [ "paperless" "vaultwarden" "gitea" "riptide" "vikunja" ];
     ensureUsers = [
-      { name = "paperless";    ensureDBOwnership = true; }
+      { name = "paperless";   ensureDBOwnership = true; }
       { name = "vaultwarden"; ensureDBOwnership = true; }
       { name = "gitea";       ensureDBOwnership = true; }
       { name = "riptide";     ensureDBOwnership = true; }
@@ -517,7 +517,7 @@
   };
 
   systemd.tmpfiles.rules = [
-    "d /mnt/data                      0755 root      root      -"
+    "d /mnt/data                    0755 root      root      -"
     "d /mnt/data/paperless          0750 paperless paperless -"
     "d /mnt/data/paperless/media    0750 paperless paperless -"
     "d /mnt/data/paperless/consume  0750 paperless paperless -"
@@ -526,7 +526,7 @@
     "d /mnt/data/convertx           0750 convertx  convertx  -"
     "d /mnt/data/gokapi             0750 gokapi    gokapi    -"
     "d /mnt/data/riptide            0750 root      root      -"
-    "d /mnt/data/riptide/rustfs      0777 root      root      -"
+    "d /mnt/data/riptide/rustfs     0777 root      root      -"
     "d /mnt/data/riptide/consume    0750 root      root      -"
   ];
 
