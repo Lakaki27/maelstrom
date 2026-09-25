@@ -305,7 +305,13 @@
     };
   };
 
-  users.users.ollama.extraGroups = [ "render" "video" ];
+  users.users.ollama = {
+    isSystemUser = true;
+    group = "ollama";
+    extraGroups = [ "render" "video" ];
+  };
+
+  users.groups.ollama = {};
 
   systemd.services = {
     docker-riptide-backend = {
