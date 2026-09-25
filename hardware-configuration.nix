@@ -1,28 +1,37 @@
 { config, lib, pkgs, modulesPath, ... }:
 
 {
-    imports = [
-        (modulesPath + "/installer/scan/not-detected.nix")
+  imports = [
+    (modulesPath + "/installer/scan/not-detected.nix")
+  ];
+
+  boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "sdhci_pci" ];
+  boot.initrd.kernelModules = [ ];
+  boot.kernelModules = [ "kvm-intel" ];
+  boot.extraModulePackages = [ ];
+
+  hardware.graphics = {
+    enable = true;
+    extraPackages = with pkgs; [
+      intel-media-driver   # VA-API Video Acceleration
+      intel-compute-runtime # OpenCL/SYCL driver for Intel iGPU (Neo)
+      vulkan-loader        # Vulkan API driver loader
     ];
+  };
 
-    boot.initrd.availableKernelModules = [ "xhci_pci" "ahci" "nvme" "usbhid" "usb_storage" "sd_mod" "sdhci_pci" ];
-    boot.initrd.kernelModules = [ ];
-    boot.kernelModules = [ "kvm-intel" ];
-    boot.extraModulePackages = [ ];
+  fileSystems."/" = {
+    device = "/dev/disk/by-uuid/3d1d01c5-f56b-4245-b61c-520ce25db9d7";
+    fsType = "ext4";
+  };
 
-    fileSystems."/" = {
-        device = "/dev/disk/by-uuid/3d1d01c5-f56b-4245-b61c-520ce25db9d7";
-        fsType = "ext4";
-    };
+  fileSystems."/boot" = {
+    device = "/dev/disk/by-uuid/CA64-B9BA";
+    fsType = "vfat";
+    options = [ "fmask=0022" "dmask=0022" ];
+  };
 
-    fileSystems."/boot" = {
-        device = "/dev/disk/by-uuid/CA64-B9BA";
-        fsType = "vfat";
-        options = [ "fmask=0022" "dmask=0022" ];
-    };
+  swapDevices = [ ];
 
-    swapDevices = [ ];
-
-    nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
-    hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
+  nixpkgs.hostPlatform = lib.mkDefault "x86_64-linux";
+  hardware.cpu.intel.updateMicrocode = lib.mkDefault config.hardware.enableRedistributableFirmware;
 }

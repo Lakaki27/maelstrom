@@ -298,9 +298,12 @@
     port = 11434;
     loadModels = [ "hermes3:8b" ];
 
+    # Acceleration options for Intel iGPU: "vulkan" or "opencl"
+    acceleration = "vulkan";
+
     environmentVariables = {
-      OLLAMA_KEEP_ALIVE = "24h"; # Keep model loaded in RAM for 24 hours
-      OLLAMA_ORIGINS = "*"; # Allow all cross-origin requests
+      OLLAMA_KEEP_ALIVE = "24h"; # Keep model loaded in RAM/VRAM for 24 hours
+      OLLAMA_ORIGINS = "*";     # Allow all cross-origin requests
     };
   };
 
